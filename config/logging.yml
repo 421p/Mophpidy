@@ -1,0 +1,19 @@
+formatters:
+    dashed:
+        class: Monolog\Formatter\LineFormatter
+        format: "[%datetime%][%extra.memory_usage%] %level_name% - %message%\n"
+handlers:
+    console:
+        class: Monolog\Handler\StreamHandler
+        level: DEBUG
+        formatter: dashed
+        processors: [memory_processor, psr]
+        stream: php://stdout
+processors:
+    memory_processor:
+        class: Monolog\Processor\MemoryUsageProcessor
+    psr:
+        class: Monolog\Processor\PsrLogMessageProcessor
+loggers:
+    GeneralLogger:
+        handlers: [console]
