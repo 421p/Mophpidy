@@ -1,43 +1,37 @@
 <?php
 
 use Longman\TelegramBot\Entities\Update;
-use Phpidy\Command\Command;
-use Phpidy\Telegram\Callback\CallbackStorage;
-use Phpidy\Telegram\Callback\StoredCallback;
-use function Functional\map;
+use Mophpidy\Api\Player;
+use Mophpidy\Command\Command;
+use Mophpidy\Telegram\Callback\CallbackContainer;
+use Mophpidy\Telegram\Callback\CallbackStorage;
 
-return new class('/favorites/i') extends Command
+return new class('/favou?rites/i') extends Command
 {
     function execute(Update $update, array $matches)
     {
         $storage = $this->getContainer()->get(CallbackStorage::class);
 
-        $this->sender->sendMessage(
-            [
-                'reply_markup' => [
-                    'keyboard ' => $this->sender->getKeyboard(),
-                    'inline_keyboard' => map(
-                        array_keys(
-                            $this->getParameter('music_bag')
-                        ),
-                        function (string $song) use ($storage) {
-                            $callback = new StoredCallback($song);
+        /** @var Player $player */
+        $player = $this->getContainer()->get(Player::class);
 
-                            $storage->push($callback);
+        $player->getLibrary()->getFavorites()->then(
+            function (array $data) use ($storage, $update) {
 
-                            return [
-                                [
-                                    'text' => $song,
-                                    'callback_data' => $callback->getId()->toString(),
-                                ],
-                            ];
-                        }
-                    )
-                    ,
-                ],
-                'chat_id' => $update->getMessage()->getChat()->getId(),
-                'text' => 'List of favorite background songs:',
-            ]
+                $callback = CallbackContainer::packTracks($data);
+                $storage->push($callback);
+
+                $this->sender->sendMessage(
+                    [
+                        'reply_markup' => [
+                            'inline_keyboard' => $callback->mapInlineKeyboard(),
+                        ],
+                        'chat_id' => $update->getMessage()->getChat()->getId(),
+                        'text' => 'List of favorite background songs:',
+                    ]
+                );
+            },
+            'dump'
         );
     }
 };

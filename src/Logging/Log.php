@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpidy\Logging;
+namespace Mophpidy\Logging;
 
 use Cascade\Cascade;
 use Psr\Log\LoggerInterface;

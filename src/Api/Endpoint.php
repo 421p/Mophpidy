@@ -1,13 +1,12 @@
 <?php
 
-namespace Phpidy\Api;
+namespace Mophpidy\Api;
 
 use Evenement\EventEmitterTrait;
-use Phpidy\Logging\Log;
+use Mophpidy\Logging\Log;
 use Ramsey\Uuid\Uuid;
 use Ratchet\Client\Connector;
 use Ratchet\Client\WebSocket;
-use React\EventLoop\ExtEventLoop;
 use React\EventLoop\LoopInterface;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
@@ -33,9 +32,28 @@ class Endpoint
         $this->connector = new Connector($loop);
     }
 
+    public function getUriSchemes(): PromiseInterface
+    {
+        return $this->ask('core.get_uri_schemes');
+    }
+
     public function connect()
     {
         $this->connectToServer();
+    }
+
+    private function connectToServer()
+    {
+        Log::info('Trying to connect...');
+
+        ($this->connector)($this->uri, [], [])
+            ->then(
+                \Closure::fromCallable([$this, 'onConnect']),
+                function (\Exception $e) {
+                    Log::info("Could not connect: {$e->getMessage()}\n");
+                    $this->loop->addTimer(3, \Closure::fromCallable([$this, 'connectToServer']));
+                }
+            );
     }
 
     public function ask(string $procedure, array $payload = []): PromiseInterface
@@ -106,20 +124,6 @@ class Endpoint
         );
 
         $this->emit(self::CONNECTED);
-    }
-
-    private function connectToServer()
-    {
-        Log::info('Trying to connect...');
-
-        ($this->connector)($this->uri, [], [])
-            ->then(
-                \Closure::fromCallable([$this, 'onConnect']),
-                function (\Exception $e) {
-                    Log::info("Could not connect: {$e->getMessage()}\n");
-                    $this->loop->addTimer(3, \Closure::fromCallable([$this, 'connectToServer']));
-                }
-            );
     }
 
 }

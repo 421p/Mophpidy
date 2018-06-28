@@ -1,7 +1,7 @@
 <?php
 
 use Longman\TelegramBot\Entities\Update;
-use Phpidy\Command\Command;
+use Mophpidy\Command\Command;
 
 return new class('/\/ping/i') extends Command
 {

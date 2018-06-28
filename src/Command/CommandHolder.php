@@ -1,14 +1,25 @@
 <?php
 
-namespace Phpidy\Command;
+namespace Mophpidy\Command;
 
-use Phpidy\Logging\Log;
+use Mophpidy\Logging\Log;
 use Symfony\Component\Finder\Finder;
 
 class CommandHolder implements \IteratorAggregate
 {
+    private $cache = [];
+
+    public function cacheCommands()
+    {
+        $this->cache = $this->getCommands();
+    }
+
     public function getCommands(): array
     {
+        if (count($this->cache) !== 0) {
+            return $this->cache;
+        }
+
         $finder = new Finder();
 
         $finder->files()->in(__DIR__.'/../commands');

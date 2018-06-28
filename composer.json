@@ -1,26 +1,23 @@
 {
-    "require": {
-        "ratchet/pawl": "^0.3.2",
-        "lstrojny/functional-php": "^1.8",
-        "monolog/monolog": "^1.23",
-        "theorchard/monolog-cascade": "dev-master",
-        "ramsey/uuid": "^3.7",
-        "symfony/dependency-injection": "^4.1",
-        "symfony/dotenv": "^4.1",
-        "longman/telegram-bot": "^0.53.0",
-        "iainconnor/composer-pthreads": "^1.0",
-        "react/http-client": "^0.5.9",
-        "react/stream": "^0.7.7",
-        "symfony/finder": "^4.1",
-        "php-telegram-bot/inline-keyboard-pagination": "^1.0",
-        "clue/redis-react": "^2.2"
-    },
-    "require-dev": {
-        "symfony/var-dumper": "^4.1"
-    },
-    "autoload": {
-        "psr-4": {
-            "Phpidy\\" : "src"
-        }
+  "require": {
+    "ratchet/pawl": "^0.3.2",
+    "lstrojny/functional-php": "^1.8",
+    "monolog/monolog": "^1.23",
+    "theorchard/monolog-cascade": "dev-master",
+    "ramsey/uuid": "^3.7",
+    "symfony/dependency-injection": "^4.1",
+    "symfony/dotenv": "^4.1",
+    "longman/telegram-bot": "^0.53.0",
+    "react/http-client": "^0.5.9",
+    "react/stream": "^0.7.7",
+    "symfony/finder": "^4.1"
+  },
+  "require-dev": {
+    "symfony/var-dumper": "^4.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Mophpidy\\": "src"
     }
+  }
 }

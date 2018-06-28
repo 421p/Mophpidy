@@ -15,8 +15,7 @@ RUN apk add --update \
 		libevent-dev \
 		openssl-dev \
 	&& pecl install event \
-	&& pecl install lua \
-	&& docker-php-ext-enable event lua \
+	&& docker-php-ext-enable event \
 	&& mv /usr/local/etc/php/conf.d/docker-php-ext-event.ini \
 		/usr/local/etc/php/conf.d/docker-php-ext-zz-event.ini \
 	&& rm /usr/local/etc/php/bogus.ini \
@@ -61,9 +60,12 @@ RUN apk add --update \
 	&& rm -rf /tmp/* /var/cache/apk/*
 
 RUN mkdir /app
+RUN touch /app/.env
 
 ADD bot.php /app/index.php
 ADD autoload.php /app/autoload.php
 ADD vendor /app/vendor
+ADD src /app/src
+ADD config /app/config
 
 CMD ["php", "/app/index.php"]

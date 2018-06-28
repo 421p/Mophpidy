@@ -1,10 +1,13 @@
 <?php
 
-namespace Phpidy\Api;
+namespace Mophpidy\Api;
 
+use React\Promise as When;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
+use function Functional\filter;
 use function Functional\first;
+use function Functional\map;
 
 class Library
 {
@@ -15,24 +18,65 @@ class Library
         $this->endpoint = $endpoint;
     }
 
-    public function getAllPlaylists(): PromiseInterface
+    public function browse($uri = null): PromiseInterface
     {
-        return $this->endpoint->ask('core.playlists.as_list');
+        return $this->endpoint->ask('core.library.browse', ['uri' => $uri]);
     }
 
-    public function getPlaylist(string $uri): PromiseInterface
+    public function getFavorites(string $pattern = '/favou?rites/i'): PromiseInterface
     {
-        return $this->endpoint->ask(
-            'core.playlists.get_items',
-            [
-                'uri' => $uri,
-            ]
+        $defer = new Deferred();
+        $reject = \Closure::fromCallable([$defer, 'reject']);
+
+        $this->endpoint->getUriSchemes()->then(
+            function (array $schemes) use ($defer, $reject, $pattern) {
+                $promises = [];
+
+                if (in_array('soundcloud', $schemes)) {
+                    $promises[] = $this->browse('soundcloud:directory:sets');
+                }
+
+                $promises[] = $this->getAllPlaylists();
+
+                When\all($promises)->then(
+                    function (array $data) use ($defer, $reject, $pattern) {
+
+                        $promises = map(
+                            filter(
+                                array_merge(...$data),
+                                function (array $item) use ($pattern) {
+                                    return preg_match($pattern, $item['name']);
+                                }
+                            ),
+                            function (array $item) use ($defer) {
+                                switch ($item['type']) {
+                                    case 'directory':
+                                        return $this->browse($item['uri']);
+                                    case 'playlist':
+                                        return $this->getPlaylist($item['uri']);
+                                    default:
+                                        $exception = new \RuntimeException('Unknown type: '.$item['type']);
+
+                                        $defer->reject($exception);
+                                        throw $exception;
+                                }
+                            }
+                        );
+
+                        When\all($promises)->then(
+                            function (array $data) use ($defer) {
+                                $defer->resolve(array_merge(...$data));
+                            },
+                            $reject
+                        );
+                    },
+                    $reject
+                );
+            },
+            $reject
         );
-    }
 
-    public function getFavorites(): PromiseInterface
-    {
-        return $this->getPlaylistByName('Favorites');
+        return $defer->promise();
     }
 
     public function getPlaylistByName(string $name): PromiseInterface
@@ -61,7 +105,22 @@ class Library
         return $defer->promise();
     }
 
-    public function getGmusicPromoted(): PromiseInterface
+    public function getAllPlaylists(): PromiseInterface
+    {
+        return $this->endpoint->ask('core.playlists.as_list');
+    }
+
+    public function getPlaylist(string $uri): PromiseInterface
+    {
+        return $this->endpoint->ask(
+            'core.playlists.get_items',
+            [
+                'uri' => $uri,
+            ]
+        );
+    }
+
+    public function getPromoted(): PromiseInterface
     {
         return $this->getPlaylist('gmusic:playlist:promoted');
     }
@@ -80,7 +139,7 @@ class Library
                 ],
             ]
         )->then(
-            function (array $data) use ($defer, $name) {
+            function (array $data) use ($defer, $rejecter, $name) {
                 $track = first(
                     $data[0]['tracks'],
                     function (array $element) use ($name) {

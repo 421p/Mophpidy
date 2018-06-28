@@ -1,7 +1,7 @@
 <?php
 
-use Phpidy\DI\Injector;
-use Phpidy\Logging\Log;
+use Mophpidy\DI\Injector;
+use Mophpidy\Logging\Log;
 use Symfony\Component\Dotenv\Dotenv;
 
 require __DIR__.'/vendor/autoload.php';

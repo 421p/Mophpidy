@@ -1,22 +1,22 @@
 <?php
 
-namespace Phpidy\Command;
+namespace Mophpidy\Command;
 
 use Longman\TelegramBot\Entities\Update;
-use Phpidy\Behaviour\ContainerAccess;
-use Phpidy\Telegram\Sender;
+use Mophpidy\Behaviour\ContainerAccess;
+use Mophpidy\Telegram\TelegramCommunicator;
 
 abstract class Command
 {
     use ContainerAccess;
 
-    private $regex;
     protected $sender;
+    private $regex;
 
     public function __construct(string $regex)
     {
         $this->regex = $regex;
-        $this->sender = $this->getContainer()->get(Sender::class);
+        $this->sender = $this->getContainer()->get(TelegramCommunicator::class);
     }
 
     public function match(string $text, array &$matches): bool

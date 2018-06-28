@@ -2,7 +2,7 @@
 
 namespace Longman\TelegramBot\Commands\SystemCommands;
 
-use Phpidy\Telegram\ExtendedSystemCommand;
+use Mophpidy\Telegram\ExtendedSystemCommand;
 
 class StartCommand extends ExtendedSystemCommand
 {

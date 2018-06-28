@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpidy\Api;
+namespace Mophpidy\Api;
 
 use React\Promise\PromiseInterface;
 
@@ -21,5 +21,10 @@ class Mixer
                 'volume' => $val,
             ]
         );
+    }
+
+    public function getVolume(): PromiseInterface
+    {
+        return $this->endpoint->ask('core.mixer.get_volume');
     }
 }

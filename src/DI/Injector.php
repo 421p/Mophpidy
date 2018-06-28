@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpidy\DI;
+namespace Mophpidy\DI;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;

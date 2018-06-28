@@ -1,8 +1,8 @@
 <?php
 
-namespace Phpidy\Behaviour;
+namespace Mophpidy\Behaviour;
 
-use Phpidy\DI\Injector;
+use Mophpidy\DI\Injector;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 trait ContainerAccess

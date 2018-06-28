@@ -1,12 +1,11 @@
 <?php
 
 use Longman\TelegramBot\Entities\Update;
-use Phpidy\Api\Library;
-use Phpidy\Api\Player;
-use Phpidy\Command\Command;
-use Phpidy\Telegram\Callback\CallbackStorage;
-use Phpidy\Telegram\Callback\StoredCallback;
-use function Functional\map;
+use Mophpidy\Api\Library;
+use Mophpidy\Api\Player;
+use Mophpidy\Command\Command;
+use Mophpidy\Telegram\Callback\CallbackContainer;
+use Mophpidy\Telegram\Callback\CallbackStorage;
 
 return new class('/\/(?<command>search|soundcloud)\s(?<query>.+)/') extends Command
 {
@@ -35,31 +34,14 @@ return new class('/\/(?<command>search|soundcloud)\s(?<query>.+)/') extends Comm
                 } else {
                     $storage = $this->getContainer()->get(CallbackStorage::class);
 
+                    $callback = CallbackContainer::packTracks($data[0]['tracks']);
+
+                    $storage->push($callback);
+
                     $this->sender->sendMessage(
                         [
                             'reply_markup' => [
-                                'keyboard ' => $this->sender->getKeyboard(),
-                                'inline_keyboard' => map(
-                                    $data[0]['tracks'],
-                                    function (array $track) use ($storage) {
-                                        $name = sprintf('%s - %s', $track['artists'][0]['name'], $track['name']);
-
-                                        $callback = new StoredCallback(
-                                            sprintf('/playuri %s', $track['uri']),
-                                            ['name' => $name]
-                                        );
-
-                                        $storage->push($callback);
-
-                                        return [
-                                            [
-                                                'text' => $name,
-                                                'callback_data' => $callback->getId()->toString(),
-                                            ],
-                                        ];
-                                    }
-                                )
-                                ,
+                                'inline_keyboard' => $callback->mapInlineKeyboard(),
                             ],
                             'chat_id' => $message->getChat()->getId(),
                             'text' => 'Found:',

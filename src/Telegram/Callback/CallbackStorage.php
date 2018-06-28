@@ -1,8 +1,8 @@
 <?php
 
-namespace Phpidy\Telegram\Callback;
+namespace Mophpidy\Telegram\Callback;
 
-use Phpidy\Logging\Log;
+use Mophpidy\Logging\Log;
 use React\EventLoop\LoopInterface;
 
 class CallbackStorage
@@ -14,21 +14,29 @@ class CallbackStorage
         $loop->addPeriodicTimer(60, \Closure::fromCallable([$this, 'cleanup']));
     }
 
-    public function push(StoredCallback $callback)
+    public function push(CallbackContainer $callback)
     {
         $this->callbacks[$callback->getId()->toString()] = $callback;
     }
 
-    public function get(string $id): ?StoredCallback
+    public function get(string $id): ?CallbackContainer
     {
-        return @$this->callbacks[$id];
+        return isset($this->callbacks[$id]) ? $this->callbacks[$id] : null;
+    }
+
+    public function remove(string $id): ?CallbackContainer
+    {
+        $callback = $this->get($id);
+        unset($this->callbacks[$id]);
+
+        return $callback;
     }
 
     private function cleanup()
     {
         Log::info('Cleaning up storage, current amount of stored callbacks: '.count($this->callbacks));
 
-        /** @var StoredCallback $callback */
+        /** @var CallbackContainer $callback */
         foreach ($this->callbacks as $i => $callback) {
             if ($callback->getDate()->diff(new \DateTime())->i > 3) {
                 unset($this->callbacks[$i]);

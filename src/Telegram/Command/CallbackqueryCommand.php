@@ -2,9 +2,10 @@
 
 namespace Longman\TelegramBot\Commands\SystemCommands;
 
-use Phpidy\Command\Command;
-use Phpidy\Telegram\Callback\CallbackStorage;
-use Phpidy\Telegram\ExtendedSystemCommand;
+use Mophpidy\Command\Command;
+use Mophpidy\Telegram\Callback\CallbackStorage;
+use Mophpidy\Telegram\Callback\CallbackContainer;
+use Mophpidy\Telegram\ExtendedSystemCommand;
 
 /**
  * Inline query command
@@ -13,7 +14,7 @@ class CallbackqueryCommand extends ExtendedSystemCommand
 {
     public function execute()
     {
-        $data = $this->getUpdate()->getCallbackQuery()->getData();
+        [$id, $index] = explode(':', $this->getUpdate()->getCallbackQuery()->getData());
 
         $chatId = $this->getUpdate()->getCallbackQuery()->getMessage()->getChat()->getId();
         $messageId = $this->getUpdate()->getCallbackQuery()->getMessage()->getMessageId();
@@ -21,7 +22,7 @@ class CallbackqueryCommand extends ExtendedSystemCommand
         if ($this->isUserAllowed($chatId)) {
 
             $storage = $this->getContainer()->get(CallbackStorage::class);
-            $callback = $storage->get($data);
+            $callback = $storage->get($id);
 
             if (!$callback) {
 
@@ -37,6 +38,8 @@ class CallbackqueryCommand extends ExtendedSystemCommand
                 return parent::execute();
             }
 
+            $callback->addPayloadValue('index', $index);
+
             /** @var Command $command */
             foreach ($this->holder as $command) {
                 $matches = [];
@@ -45,7 +48,9 @@ class CallbackqueryCommand extends ExtendedSystemCommand
                     $command->execute($this->getUpdate(), $matches);
                 }
 
-                $this->sender->deleteMessage($chatId, $messageId);
+                if ($callback->getType() === CallbackContainer::TRACKS) {
+                    $this->sender->deleteMessage($chatId, $messageId);
+                }
             }
 
         } else {

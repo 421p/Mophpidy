@@ -1,14 +1,15 @@
 <?php
 
-namespace Phpidy\Telegram;
+namespace Mophpidy\Telegram;
 
 use Longman\TelegramBot\Entities\Update;
-use Phpidy\Logging\Log;
+use Mophpidy\Logging\Log;
 use React\EventLoop\LoopInterface;
 use React\HttpClient\Client;
 use React\HttpClient\Response;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
+use Symfony\Component\VarDumper\VarDumper;
 
 class Telegram extends \Longman\TelegramBot\Telegram
 {
@@ -47,7 +48,8 @@ class Telegram extends \Longman\TelegramBot\Telegram
 
                         $this->offset = $update->getUpdateId() + 1;
                     } catch (\Throwable $e) {
-                        Log::error($e->getMessage().$e->getTraceAsString());
+
+                        dump($e);
                     }
                 }
 

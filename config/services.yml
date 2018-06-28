@@ -1,55 +1,65 @@
 parameters:
   keyboard.default:
     -
-      - '👍🏻 Promoted'
       - '❤️ Favorites'
+      - '📂 Browse'
+    -
+      - '◀️Previous'
       - '▶️Play'
       - '⏸️Pause'
+      - '▶️Next'
     -
-      - '🔈 Volume 20'
-      - '🔉 Volume 60'
-      - '🔊 Volume 100'
+      - '🔈 Volume down'
+      - '🔊 Volume up'
 
 services:
   React\EventLoop\LoopInterface:
     public: true
     factory: ['React\EventLoop\Factory', create]
 
-  Phpidy\Api\Endpoint:
+  Mophpidy\Api\Endpoint:
     arguments: ['%env(MOPIDY_URI)%', '@React\EventLoop\LoopInterface']
     calls:
       - ['connect']
-  Phpidy\Api\TrackList:
-    arguments: ['@Phpidy\Api\Endpoint']
-  Phpidy\Api\Library:
-    arguments: ['@Phpidy\Api\Endpoint']
-  Phpidy\Api\Playback:
-    arguments: ['@Phpidy\Api\Endpoint']
-  Phpidy\Api\Mixer:
-    arguments: ['@Phpidy\Api\Endpoint']
+  Mophpidy\Api\TrackList:
+    arguments: ['@Mophpidy\Api\Endpoint']
+  Mophpidy\Api\Library:
+    arguments: ['@Mophpidy\Api\Endpoint']
+  Mophpidy\Api\Playback:
+    arguments: ['@Mophpidy\Api\Endpoint']
+  Mophpidy\Api\Mixer:
+    arguments: ['@Mophpidy\Api\Endpoint']
 
-  Phpidy\Api\Player:
+  Mophpidy\Api\Player:
     public: true
     arguments:
-      - '@Phpidy\Api\Library'
-      - '@Phpidy\Api\TrackList'
-      - '@Phpidy\Api\Playback'
-      - '@Phpidy\Api\Mixer'
+      - '@Mophpidy\Api\Library'
+      - '@Mophpidy\Api\TrackList'
+      - '@Mophpidy\Api\Playback'
+      - '@Mophpidy\Api\Mixer'
+      - '@Mophpidy\Api\Endpoint'
 
   Longman\TelegramBot\Telegram:
     public: true
-    class: 'Phpidy\Telegram\Telegram'
+    class: 'Mophpidy\Telegram\Telegram'
     arguments: ['%env(TELEGRAM_TOKEN)%', '%env(BOT_USERNAME)%', '@React\EventLoop\LoopInterface']
     calls:
       - ['useGetUpdatesWithoutDatabase']
 
-  Phpidy\Telegram\Sender:
+  Mophpidy\Telegram\TelegramCommunicator:
     public: true
-    arguments: ['%env(TELEGRAM_TOKEN)%', '@React\EventLoop\LoopInterface', '%keyboard.default%']
+    arguments:
+      - '%env(TELEGRAM_TOKEN)%'
+      - '@React\EventLoop\LoopInterface'
+      - '%keyboard.default%'
+      - '@Mophpidy\Api\TrackList'
+      - '@Mophpidy\Api\Playback'
 
-  Phpidy\Command\CommandHolder:
+  Mophpidy\Command\CommandHolder:
+    calls:
+      - ['cacheCommands']
     public: true
 
-  Phpidy\Telegram\Callback\CallbackStorage:
+  Mophpidy\Telegram\Callback\CallbackStorage:
     arguments: ['@React\EventLoop\LoopInterface']
     public: true

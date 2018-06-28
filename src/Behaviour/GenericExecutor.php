@@ -1,12 +1,12 @@
 <?php
 
-namespace Phpidy\Behaviour;
+namespace Mophpidy\Behaviour;
 
 use Longman\TelegramBot\Entities\Message;
-use Phpidy\Command\Command;
-use Phpidy\Telegram\Sender;
+use Mophpidy\Command\Command;
+use Mophpidy\Telegram\TelegramCommunicator;
 
-/** @property Sender $sender */
+/** @property TelegramCommunicator $sender */
 trait GenericExecutor
 {
     protected function executeGeneric()

@@ -1,12 +1,12 @@
 <?php
 
-namespace Phpidy\Telegram;
+namespace Mophpidy\Telegram;
 
 use Longman\TelegramBot\Commands\SystemCommand;
 use Longman\TelegramBot\Entities\Update;
 use Longman\TelegramBot\Telegram;
-use Phpidy\Behaviour\ContainerAccess;
-use Phpidy\Command\CommandHolder;
+use Mophpidy\Behaviour\ContainerAccess;
+use Mophpidy\Command\CommandHolder;
 
 class ExtendedSystemCommand extends SystemCommand
 {
@@ -18,9 +18,9 @@ class ExtendedSystemCommand extends SystemCommand
 
     public function __construct(Telegram $telegram, Update $update = null)
     {
-        $this->sender = $this->getContainer()->get(Sender::class);
+        $this->sender = $this->getContainer()->get(TelegramCommunicator::class);
         $this->holder = $this->getContainer()->get(CommandHolder::class);
-        $this->allowedUsers = json_decode(getenv('ALLOWED_USERS'), true);
+        $this->allowedUsers = array_map('trim', explode(',', getenv('ALLOWED_USERS')));
 
         parent::__construct($telegram, $update);
     }
