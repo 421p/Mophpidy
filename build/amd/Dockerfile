@@ -1,63 +1,11 @@
-FROM php:7.2.6-cli-alpine3.7
+FROM php:7-cli
 
-RUN apk add --update \
-		autoconf \
-		g++ \
-		libtool \
-		make \
-	&& apk add --update icu-dev \
-	&& docker-php-ext-install intl \
-	&& docker-php-ext-install sockets \
-	&& touch /usr/local/etc/php/bogus.ini \
-	&& pear config-set php_ini /usr/local/etc/php/bogus.ini \
-	&& pecl config-set php_ini /usr/local/etc/php/bogus.ini \
-	&& apk add --update \
-		libevent-dev \
-		openssl-dev \
-	&& pecl install event \
-	&& docker-php-ext-enable event \
-	&& mv /usr/local/etc/php/conf.d/docker-php-ext-event.ini \
-		/usr/local/etc/php/conf.d/docker-php-ext-zz-event.ini \
-	&& rm /usr/local/etc/php/bogus.ini \
-	&& apk del \
-		autoconf \
-		bash \
-		binutils \
-		binutils-libs \
-		db \
-		expat \
-		file \
-		g++ \
-		gcc \
-		gdbm \
-		gmp \
-		isl \
-		libatomic \
-		libbz2 \
-		libc-dev \
-		libffi \
-		libgcc \
-		libgomp \
-		libldap \
-		libltdl \
-		libmagic \
-		libsasl \
-		libstdc++ \
-		libtool \
-		m4 \
-		make \
-		mpc1 \
-		mpfr3 \
-		musl-dev \
-		perl \
-		pkgconf \
-		pkgconfig \
-		python \
-		re2c \
-		readline \
-		sqlite-libs \
-		zlib-dev \
-	&& rm -rf /tmp/* /var/cache/apk/*
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y libevent-dev libssl-dev \
+    && docker-php-ext-install sockets \
+    && pecl install event \
+    && docker-php-ext-enable event \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /app
 RUN touch /app/.env
