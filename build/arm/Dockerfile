@@ -4,8 +4,6 @@ FROM arm32v7/php:7-cli
 
 COPY --from=builder /usr/bin/qemu-arm-static /usr/bin/qemu-arm-static
 
-ADD composer.json /app/composer.json
-
 RUN apt-get update \
     && apt-get install --no-install-recommends -y libevent-dev libssl-dev \
     && docker-php-ext-install sockets \
