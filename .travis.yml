@@ -1,25 +1,25 @@
 language: php
 php:
-  - 7.2
+- 7.2
 addons:
   apt:
     packages:
-      - jq
-      - docker-ce
+    - jq
+    - docker-ce
 sudo: required
 services:
-  - docker
+- docker
 before_install:
-  - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-  - docker pull arm32v7/php:7-cli
-  - docker pull php:7-cli
-  - docker pull resin/rpi-raspbian:stretch
-  - composer install
+- docker run --rm --privileged multiarch/qemu-user-static:register --reset
+- docker pull arm32v7/php:7-cli
+- docker pull php:7-cli
+- docker pull resin/rpi-raspbian:stretch
+- composer install
 script:
-  - docker build . -t 421p/mophpidy:latest -f build/amd/Dockerfile
-  - docker build . -t 421p/mophpidy:${APP_VERSION} -f build/amd/Dockerfile
-  - docker build . -t 421p/mophpidy:arm32v7 -f build/arm/Dockerfile
-  - docker build . -t 421p/mophpidy:${APP_VERSION}-arm32v7 -f build/arm/Dockerfile
+- docker build . -t 421p/mophpidy:latest -f build/amd/Dockerfile
+- docker build . -t 421p/mophpidy:${APP_VERSION} -f build/amd/Dockerfile
+- docker build . -t 421p/mophpidy:arm32v7 -f build/arm/Dockerfile
+- docker build . -t 421p/mophpidy:${APP_VERSION}-arm32v7 -f build/arm/Dockerfile
 notifications:
   webhooks: https://fathomless-fjord-24024.herokuapp.com/notify
 deploy:
@@ -29,6 +29,6 @@ deploy:
     branch: master
 env:
   global:
-    - APP_VERSION=$(cat composer.json | jq -r '.version')
-    - secure: HB+3KBm01AAr3wScE3OUe7VAuB5gZYxTYocGVBVi/OunBm2Vn4fIJ8NyzgBtkZPM88hSMGAOxTs/6rT9cKqHctHcsC+gyQDkS3SsjBjwbGGqn8HPKXKLmCulBUfqhf1NG88hLQLjM91A1abzMTG3JT/0riKuh1L4Aumj74p6aSnIl36DKzReJV91LTW38nT74nVunob8Stpu8AU15R+XKfvMOjgEdct+wxjovqXrvxR3nHU8ZIp7XWnb3xaIMVU0hIMZu+dJfHiodNdTOa/OMoA40KtkLoKsd47VGLhI8d7ub0UOZFAib/vrxtFYU4cxDCrx87I/cGpNvuckvORAYG3rivCxaATE+eK2U5TRLf+MGStt5fDTQowkxxUA8clzBgkzpSyWUKqoprkKC8/VEQbfXN0AmC5yZnjFHptTxws1lYovSmuJdaUPB4cphO48OSxOF3Fr7d9bOP7MZyGg41ELwLdNhTr0HcdnkLkW7Yf8ROqJXK9KKvK06m9VeYLMPtc9OpXijkeO4P26Ftiw1UDqtpkRCCMDPyM+DLeVUmbMTevxgNrnAJwxGn5xZ7+qUYLfV7cGs2cdzJbs/OgRGtGvQNLy65IZCquBF1jrL3EEno2sA/5r5sAvJZa7Voq4lxSPFX3oeAsEyrOs/O8bZbdmVM2SLWuLhNpnpNT6iQw=
-    - secure: MVSxHkTT6GLggy49yv0ceTX3L6RmfcWBHkbwiqD5NXG3Koj9VO6B6hqN49am14DkSTGjxhmzXGUUHbAmnxHYfq1XDEhxLZ8tQD8N7pZofZWQsc5u3pWG3ETb8HVa18u3jaf+HOJlZ3k8/ao7zNSq0msXnWnHKReKDMdh6OoSuxv5hONB0lsJVaUWbAK5lzLzJDy8X5n+jajn37f6oI60chrWROlR8uyrAJ9vqSnXVNMPpAfUzPnYZfcAIGDbOFyDn8XNmM7V1+RL5m7L6bfQ4ExPnqsvPIfdyei0hRSgs4BHQl92gmnTmV4moo7Hv3euSGrB0dpX1naOnJ7NbpGtnhhDunIDP8vRxUAk8XOVTnS/G81ibroCdOmqtKOIWjHy9oyHfdnLGHCRhlNhfEf31xzajw8FE+9Q5owhNQVKjbUUoikHEaGfY501Usi4aOzCbXhZXmSct24RiywbVXMX8nFtR7TljdgpB5x7KZX9wjkI6/kzZrOzyxNWO+MqRJ3P2KJFQ7pt+9hPc2QhV0hBwqFMC0UyQzyo15gSVv2sCoCeQCbDGXxofjBJ0ufLosSnKnLYuurcrmpBJ75ve3EsrcFuneDyWKTaYd4VGfJ1IJSXe7SgKUjh2+1mxM/BiUdb9YmZaRmlgC6WA6WBNFy9+wubrKjoDKTD9da1O6M+LUc=
+  - APP_VERSION=$(cat composer.json | jq -r '.version')
+  - secure: nsHoBsaC9PVaoY8MrWnCGE17epXcZI8rIuoVsOjTOlAQo0sjh/PYZHAAEarskxD42kncMGn8DS6iTrxqNbU/FBO36cLNd5bHQdJSJieFdB/AXkUwMSeGhCKXAbhO8t7cTQnoaLMX3sGYBe1Bccb8iKYjseSlPfzzYoD0j2sPIqzeZSZnV2z2uIe5RYWJVhcQ7loBmTEpMd+xd4NwOJ5HZ7iBl29SRoXCU2mLb06z1qmvwwfMntCv0A+XrBFVCCA7wbYqofcCUyz02X5K3gy87HcSq0j3uKAo/5ntbNbZq/rtAspTTWQn5q8aYnutlnCsYH2roNJrniWQBksVqYv3zP0tt8A0Abh4T9ydzEXAszvYjitodvnHG7sP8DkDmMXSnDxiypd+EZ6MyPkyhMvBviQZtjxuRb5nayBq/YVUuSvHCmx5FpXaZnhvYqwxec+FCIiKKezp0GdFP3oiCrcxqo2nIyPDMJAMMdhHsRKnleyT+LG8SwOa3tTEIVux2JSq3BEKp1FNvzPnpM0lcw3FksygXe+nroEszR+F1L5DNuCwKGhb3mLyXxCHUSZhktz5w9boeYIFp07MrotqZYAmW0GiH2KsjDm8r85jGgxFPc+ZCUPdoVVEPt41ahuBXcbqO0V6J0ROXZvbjzNNvLYjELEVyefXOAbu39V+Z6IVWOs=
+  - secure: PJUEwkhHUBHhXJICLYhSkYzEojIYBH+mzr8rV9JXGY+SLmtfLLwHeOXbHCstUuKX8mESX0kwfYc0vF82vC0sZIBXgG+hvQRXL1bkQEpjQjWCvfrmaYN1SxCeMEUS09p2ZvYMif2+Gdeo76KSZCkpcEcYOKtLYrIvM6zLU8aFJAV1hECz1K0UCZ5NQfQBTh/iZRlpQTwTJtd1bYlnNbT2WU4uJ8lxfq/ukwD8qkvD5RW5rtWDpohAoOIhQ8fxnY7J4BZjIyPifQNMhu3YYQzAZ4WwRu0xAthlftoqHg0OyjK8kfAxvT4sh5uxIsaKmECxIh3d7qlL4vmwN7sjzs9RJH8xWc3dvK+tyNWgrUvJX3Fmgx73gLFn3kwwVr9jb3Jth+7qB+WSXd1eZvHuiYr/aXtabBVPbe2NMblIq5cKObHNXkyqV/gu8bUFbxnHZp7/z/apk/bEJbJK2BOaDNDtSVczK7csM7dh+ajkwL2Wsf9FOLpj6gAoJAKrnAyhEYWa+Gd8q6DfnmIcPO0EG39qZKEl8z+qzZLnR5CRBJo56ceMlwRuyr5Dub0z4gmo1tj6UYaqtmZbCRNhw/KehKIZoU96Ig2FE4CbHBSOCrsXfN3dSCGz45cHoLCztXOWj4lkfv9r7aBs+PQoA8aZnDYNM4KvZuGJLr7kaBFyflI/q5k=
