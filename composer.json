@@ -1,4 +1,5 @@
 {
+  "version": "1.0.0",
   "require": {
     "ratchet/pawl": "^0.3.2",
     "lstrojny/functional-php": "^1.8",
