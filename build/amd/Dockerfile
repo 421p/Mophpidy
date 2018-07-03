@@ -7,7 +7,7 @@ RUN apt-get update \
     && docker-php-ext-enable event \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
-    && touch /app/.env
+    && mkdir /app && touch /app/.env
 
 ADD vendor /app/vendor
 ADD bot.php /app/index.php
