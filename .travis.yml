@@ -5,6 +5,7 @@ addons:
   apt:
     packages:
       - jq
+      - docker-ce
 sudo: required
 services:
   - docker
