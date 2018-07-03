@@ -24,7 +24,12 @@ notifications:
   webhooks: https://fathomless-fjord-24024.herokuapp.com/notify
 deploy:
   provider: script
-  script: bash build/deploy.sh
+  script: >
+    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_LOGIN" --password-stdin &&
+    docker push 421p/mophpidy:latest &&
+    docker push 421p/mophpidy:arm32v7 &&
+    docker push 421p/mophpidy:${APP_VERSION} &&
+    docker push 421p/mophpidy:${APP_VERSION}-arm32v7
   on:
     branch: master
 env:

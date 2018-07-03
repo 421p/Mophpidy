@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-docker build . -t 421p/priton:arm32v7 -f build/arm/Dockerfile
