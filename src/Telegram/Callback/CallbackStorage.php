@@ -34,12 +34,14 @@ class CallbackStorage
 
     private function cleanup()
     {
-        Log::info('Cleaning up storage, current amount of stored callbacks: '.count($this->callbacks));
+        if (count($this->callbacks) !== 0) {
+            Log::info('Cleaning up storage, current amount of stored callbacks: '.count($this->callbacks));
 
-        /** @var CallbackContainer $callback */
-        foreach ($this->callbacks as $i => $callback) {
-            if ($callback->getDate()->diff(new \DateTime())->i > 3) {
-                unset($this->callbacks[$i]);
+            /** @var CallbackContainer $callback */
+            foreach ($this->callbacks as $i => $callback) {
+                if ($callback->getDate()->diff(new \DateTime())->i > 3) {
+                    unset($this->callbacks[$i]);
+                }
             }
         }
     }
