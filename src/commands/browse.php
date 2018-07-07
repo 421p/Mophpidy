@@ -15,6 +15,6 @@ return new class('/browse/i') extends Command
         /** @var Player $player */
         $player = $this->getContainer()->get(Player::class);
 
-        $this->browse($update, $player, null, $update->getMessage()->getChat()->getId());
+        $this->browse($update, $player, null, $update->getMessage()->getChat()->getId(), $update->getMessage()->getMessageId());
     }
 };

@@ -36,7 +36,7 @@ services:
       MOPIDY_URI: 'ws://mopidyhost:6680/mopidy/ws/'
       TELEGRAM_TOKEN: 'TELEGRAM_BOT_TOKEN'
       BOT_USERNAME: '@TELEGRAM_BOT_USERNAME'
-      ALLOWED_USERS: '11223344' # supports multiple users '111222333, 14224124'
+      ADMIN: '11223344' # partially supports multiple users '111222333, 14224124'
 ```
 
 As you can see you have to provide 4 environment variables:
@@ -44,7 +44,7 @@ As you can see you have to provide 4 environment variables:
 * MOPIDY_URI - uri to mopidy websocket endpoint
 * TELEGRAM_TOKEN - bot token
 * BOT_USERNAME - bot username
-* ALLOWED_USERS - one or more telegram user id, only this users can use a bot
+* ADMIN - one or more (partial support) telegram user id
 
 ### Non-docker
 
@@ -55,7 +55,7 @@ As you can see you have to provide 4 environment variables:
 MOPIDY_URI='ws://mopidyhost:6680/mopidy/ws/'
 TELEGRAM_TOKEN='TELEGRAM_BOT_TOKEN'
 BOT_USERNAME='@TELEGRAM_BOT_USERNAME'
-ALLOWED_USERS='11223344'
+ADMIN='11223344'
 ```
 2) Install dependencies:
 ```

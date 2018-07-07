@@ -44,7 +44,7 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
                 $chatId = $update->getCallbackQuery()->getMessage()->getChat()->getId();
                 $messageId = $update->getCallbackQuery()->getMessage()->getMessageId();
 
-                $this->browse($update, $player, $uri, $chatId, $messageId);
+                $this->browse($update, $player, $chatId, $messageId, $uri);
             }
         );
     }

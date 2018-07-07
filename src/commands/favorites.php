@@ -21,7 +21,8 @@ return new class('/favou?rites/i') extends Command
                 $callback = CallbackContainer::pack(
                     $data,
                     CallbackContainer::TRACKS,
-                    $storage->getUser($update->getMessage()->getChat()->getId())
+                    $storage->getUser($update->getMessage()->getChat()->getId()),
+                    $update->getMessage()->getMessageId()
                 );
                 $storage->addCallback($callback);
 

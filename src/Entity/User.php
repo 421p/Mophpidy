@@ -25,6 +25,12 @@ class User
     protected $notification;
 
     /**
+     * @var boolean
+     * @ORM\Column(name="is_admin", type="boolean")
+     */
+    protected $admin;
+
+    /**
      * @ORM\OneToMany(targetEntity="CallbackContainer", mappedBy="user")
      */
     protected $callbacks;
@@ -52,5 +58,15 @@ class User
     public function setNotification(bool $notification): void
     {
         $this->notification = $notification;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->admin;
+    }
+
+    public function setAdmin(bool $admin): void
+    {
+        $this->admin = $admin;
     }
 }

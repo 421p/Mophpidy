@@ -37,7 +37,8 @@ return new class('/\/search_(?<command>gmusic|soundcloud)\s(?<query>.+)/') exten
                     $callback = CallbackContainer::pack(
                         $data[0]['tracks'],
                         CallbackContainer::TRACKS,
-                        $storage->getUser($message->getChat()->getId())
+                        $storage->getUser($message->getChat()->getId()),
+                        $message->getMessageId()
                     );
 
                     $storage->addCallback($callback);

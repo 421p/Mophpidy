@@ -12,6 +12,12 @@ use Mophpidy\Telegram\ExtendedSystemCommand;
  */
 class CallbackqueryCommand extends ExtendedSystemCommand
 {
+    /**
+     * @return \Longman\TelegramBot\Entities\ServerResponse
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws \Doctrine\ORM\TransactionRequiredException
+     */
     public function execute()
     {
         [$id, $index] = explode(':', $this->getUpdate()->getCallbackQuery()->getData());
@@ -29,11 +35,20 @@ class CallbackqueryCommand extends ExtendedSystemCommand
                 $this->sender->answerCallbackQuery(
                     $this->getUpdate()->getCallbackQuery()->getId(),
                     [
-                        'text' => 'Select faster next time. Song will not be played.',
+                        'text' => 'Select faster next time.',
                     ]
                 );
 
                 $this->sender->deleteMessage($chatId, $messageId);
+
+                return parent::execute();
+            }
+
+            if (intval($index) === -1) {
+                $this->sender->answerCallbackQuery($this->getUpdate()->getCallbackQuery()->getId());
+
+                $this->sender->deleteMessage($chatId, $messageId);
+                $storage->removeCallback($callback);
 
                 return parent::execute();
             }

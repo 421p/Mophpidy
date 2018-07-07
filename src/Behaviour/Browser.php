@@ -16,7 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 trait Browser
 {
-    protected function browse(Update $update, Player $player, $uri = null, $chatId = null, $messageId = null)
+    protected function browse(Update $update, Player $player, $chatId, $messageId, $uri = null)
     {
         $library = $player->getLibrary();
 
@@ -32,7 +32,7 @@ trait Browser
                     /** @var Storage $storage */
                     $storage = $this->getContainer()->get(Storage::class);
 
-                    $callback = CallbackContainer::pack($data, $type, $storage->getUser($chatId));
+                    $callback = CallbackContainer::pack($data, $type, $storage->getUser($chatId), $messageId);
 
                     $storage->addCallback($callback);
 

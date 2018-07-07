@@ -23,12 +23,12 @@ class CallbackContainer
     protected $id;
     /** @ORM\Column(name="date", type="date") */
     protected $date;
+    /** @ORM\Column(name="message_id", type="integer") */
+    protected $messageId;
     /**
      * @ORM\OneToMany(targetEntity="CallbackPayloadItem", mappedBy="callback", cascade={"persist", "remove"})
      */
     protected $payload;
-    /** @ORM\Column(name="select_id", type="integer", nullable=true) */
-    protected $selectIndex;
     /** @ORM\Column(name="type", type="string") */
     protected $type;
     /**
@@ -38,17 +38,20 @@ class CallbackContainer
      */
     protected $user;
 
+    protected $selectIndex;
+
     public function __construct()
     {
         $this->payload = new ArrayCollection();
     }
 
-    public static function pack(array $data, string $type, User $user): CallbackContainer
+    public static function pack(array $data, string $type, User $user, int $messageId): CallbackContainer
     {
         $callback = new CallbackContainer();
         $callback->setId(Uuid::uuid4()->toString());
         $callback->setDate(new \DateTime());
         $callback->setUser($user);
+        $callback->setMessageId($messageId);
 
         $callback->setType($type);
 
@@ -72,7 +75,7 @@ class CallbackContainer
 
     public function mapInlineKeyboard(): array
     {
-        return map(
+        $buttons = map(
             $this->payload->getIterator(),
             function (CallbackPayloadItem $item, int $i) {
                 return [
@@ -83,6 +86,15 @@ class CallbackContainer
                 ];
             }
         );
+
+        $buttons[] = [
+            [
+                'text' => '❌ Close',
+                'callback_data' => sprintf('%s:%d', $this->id, -1),
+            ],
+        ];
+
+        return $buttons;
     }
 
     public function getCommand(): string
@@ -144,5 +156,15 @@ class CallbackContainer
     public function setUser(User $user): void
     {
         $this->user = $user;
+    }
+
+    public function getMessageId()
+    {
+        return $this->messageId;
+    }
+
+    public function setMessageId($messageId): void
+    {
+        $this->messageId = $messageId;
     }
 }

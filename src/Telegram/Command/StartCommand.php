@@ -20,7 +20,7 @@ Some useful commands:
     /search_gmusic - searches for track on google music
     /search_soundcloud - searches for track on soundcloud
     /volume - set a custom value for volume [0-100]
-    /request_access - send a request to be allowed to use bot
+    /requestaccess - send a request to be allowed to use bot
     ';
 
     public function execute()

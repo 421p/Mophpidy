@@ -13,15 +13,10 @@ class Storage
     /**
      * Storage constructor.
      * @param EntityManager $connection
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\TransactionRequiredException
      */
     public function __construct(EntityManager $connection)
     {
         $this->em = $connection;
-
-        $this->updateDefaultAllowedUsers();
     }
 
     /**
@@ -34,6 +29,23 @@ class Storage
     public function getUser(int $id): ?User
     {
         return $this->em->find(User::class, $id);
+    }
+
+    /**
+     * @param int $id
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function addDefaultUser(int $id)
+    {
+        $user = new User();
+
+        $user->setId($id);
+        $user->setNotification(false);
+        $user->setAdmin(false);
+
+        $this->em->persist($user);
+        $this->em->flush();
     }
 
     /**
@@ -83,6 +95,19 @@ class Storage
             ->select('u')
             ->from(User::class, 'u')
             ->where('u.notification = true')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return User[]
+     */
+    public function getAdmins(): array
+    {
+        return $this->em->createQueryBuilder()
+            ->select('u')
+            ->from(User::class, 'u')
+            ->where('u.admin = true')
             ->getQuery()
             ->getResult();
     }
@@ -146,9 +171,9 @@ class Storage
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\TransactionRequiredException
      */
-    private function updateDefaultAllowedUsers()
+    public function updateAdmins()
     {
-        $users = array_map('trim', explode(',', getenv('ALLOWED_USERS')));
+        $users = array_map('trim', explode(',', getenv('ADMIN')));
 
         foreach ($users as $id) {
             $user = $this->em->find(User::class, $id);
@@ -156,7 +181,8 @@ class Storage
             if ($user === null) {
                 $user = new User();
                 $user->setId($id);
-                $user->setNotification(false);
+                $user->setNotification(true);
+                $user->setAdmin(true);
 
                 $this->em->persist($user);
             }
