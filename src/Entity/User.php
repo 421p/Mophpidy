@@ -2,6 +2,7 @@
 
 namespace Mophpidy\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -22,6 +23,16 @@ class User
      * @ORM\Column(name="should_be_notified", type="boolean")
      */
     protected $notification;
+
+    /**
+     * @ORM\OneToMany(targetEntity="CallbackContainer", mappedBy="user")
+     */
+    protected $callbacks;
+
+    public function __construct()
+    {
+        $this->callbacks = new ArrayCollection();
+    }
 
     public function getId()
     {

@@ -11,6 +11,9 @@ parameters:
     -
       - '🔈 Volume down'
       - '🔊 Volume up'
+  not.allowed: |
+    You are not allowed to access this bot.
+    Try to /request_access
 
 services:
   React\EventLoop\LoopInterface:

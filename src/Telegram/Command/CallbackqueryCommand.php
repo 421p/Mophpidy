@@ -3,8 +3,8 @@
 namespace Longman\TelegramBot\Commands\SystemCommands;
 
 use Mophpidy\Command\Command;
-use Mophpidy\Telegram\Callback\CallbackStorage;
-use Mophpidy\Telegram\Callback\CallbackContainer;
+use Mophpidy\Entity\CallbackContainer;
+use Mophpidy\Storage\Storage;
 use Mophpidy\Telegram\ExtendedSystemCommand;
 
 /**
@@ -21,8 +21,8 @@ class CallbackqueryCommand extends ExtendedSystemCommand
 
         if ($this->isUserAllowed($chatId)) {
 
-            $storage = $this->getContainer()->get(CallbackStorage::class);
-            $callback = $storage->get($id);
+            $storage = $this->getContainer()->get(Storage::class);
+            $callback = $storage->getCallback($id);
 
             if (!$callback) {
 
@@ -45,7 +45,7 @@ class CallbackqueryCommand extends ExtendedSystemCommand
                 $matches = [];
 
                 if ($command->match($callback->getCommand(), $matches)) {
-                    $command->execute($this->getUpdate(), $matches);
+                    $command->execute($this->getUpdate(), $matches, $callback);
                 }
 
                 if ($callback->getType() === CallbackContainer::TRACKS) {
@@ -57,7 +57,7 @@ class CallbackqueryCommand extends ExtendedSystemCommand
             $this->sender->sendMessageWithDefaultKeyboard(
                 [
                     'chat_id' => $chatId,
-                    'text' => 'You are not a member of Priton community.',
+                    'text' => $this->getContainer()->getParameter('not.allowed'),
                 ]
             );
         }

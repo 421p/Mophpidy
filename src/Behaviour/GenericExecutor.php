@@ -29,7 +29,7 @@ trait GenericExecutor
             $this->sender->sendMessageWithDefaultKeyboard(
                 [
                     'chat_id' => $chat_id,
-                    'text' => 'You are not a member of Priton community.',
+                    'text' => $this->getContainer()->getParameter('not.allowed'),
                 ]
             );
         }

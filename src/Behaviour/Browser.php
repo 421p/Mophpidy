@@ -4,8 +4,9 @@ namespace Mophpidy\Behaviour;
 
 use Longman\TelegramBot\Entities\Update;
 use Mophpidy\Api\Player;
-use Mophpidy\Telegram\Callback\CallbackContainer;
-use Mophpidy\Telegram\Callback\CallbackStorage;
+use Mophpidy\Entity\CallbackContainer;
+use Mophpidy\Logging\Log;
+use Mophpidy\Storage\Storage;
 use Mophpidy\Telegram\TelegramCommunicator;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -24,30 +25,39 @@ trait Browser
         $library->browse($uri)->then(
             function (array $data) use ($update, $inProgress, $chatId, $messageId) {
 
-                $type = current($data)['type'];
+                try {
 
-                $callback = $type === 'directory' ? CallbackContainer::packDirs($data) : CallbackContainer::packTracks($data);
+                    $type = $data[0]['type'] === 'directory' ? CallbackContainer::DIRECTORIES : CallbackContainer::TRACKS;
 
-                /** @var CallbackStorage $storage */
-                $storage = $this->getContainer()->get(CallbackStorage::class);
+                    /** @var Storage $storage */
+                    $storage = $this->getContainer()->get(Storage::class);
 
-                $storage->push($callback);
+                    $callback = CallbackContainer::pack($data, $type, $storage->getUser($chatId));
 
-                $markup = [
-                    'inline_keyboard' => $callback->mapInlineKeyboard(),
-                ];
+                    $storage->addCallback($callback);
 
-                if ($inProgress) {
-                    $this->sender->editMessageReplyMarkup($chatId, $messageId, $markup);
-                } else {
-                    $this->sender->sendMessage(
-                        [
-                            'reply_markup' => $markup,
-                            'chat_id' => $update->getMessage()->getChat()->getId(),
-                            'text' => 'Directories:',
-                        ]
-                    );
+                    $markup = [
+                        'inline_keyboard' => $callback->mapInlineKeyboard(),
+                    ];
+
+                    if ($inProgress) {
+                        $this->sender->editMessageReplyMarkup($chatId, $messageId, $markup);
+                    } else {
+                        $this->sender->sendMessage(
+                            [
+                                'reply_markup' => $markup,
+                                'chat_id' => $update->getMessage()->getChat()->getId(),
+                                'text' => 'Directories:',
+                            ]
+                        );
+                    }
+
+                } catch (\Throwable $e) {
+                    dump($e);
                 }
+            },
+            function (\Throwable $e) {
+                Log::error($e->__toString());
             }
         );
     }

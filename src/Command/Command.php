@@ -4,6 +4,7 @@ namespace Mophpidy\Command;
 
 use Longman\TelegramBot\Entities\Update;
 use Mophpidy\Behaviour\ContainerAccess;
+use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Telegram\TelegramCommunicator;
 
 abstract class Command
@@ -24,7 +25,7 @@ abstract class Command
         return preg_match($this->regex, $text, $matches) === 1;
     }
 
-    abstract function execute(Update $update, array $matches);
+    abstract function execute(Update $update, array $matches, CallbackContainer $callback = null);
 
     public function getRegex(): string
     {

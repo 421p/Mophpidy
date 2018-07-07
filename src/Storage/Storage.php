@@ -3,6 +3,7 @@
 namespace Mophpidy\Storage;
 
 use Doctrine\ORM\EntityManager;
+use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Entity\User;
 
 class Storage
@@ -21,6 +22,56 @@ class Storage
         $this->em = $connection;
 
         $this->updateDefaultAllowedUsers();
+    }
+
+    /**
+     * @param int $id
+     * @return User|null
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws \Doctrine\ORM\TransactionRequiredException
+     */
+    public function getUser(int $id): ?User
+    {
+        return $this->em->find(User::class, $id);
+    }
+
+    /**
+     * @param CallbackContainer $container
+     * @throws \Throwable
+     */
+    public function addCallback(CallbackContainer $container)
+    {
+        $this->em->transactional(
+            function () use ($container) {
+                $this->em->persist($container);
+                $this->em->flush();
+            }
+        );
+    }
+
+    /**
+     * @param string $id
+     * @return CallbackContainer|null|object
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws \Doctrine\ORM\TransactionRequiredException
+     */
+    public function getCallback(string $id): ?CallbackContainer
+    {
+        return $this->em->find(CallbackContainer::class, $id);
+    }
+
+    /**
+     * @param CallbackContainer $container
+     * @return void
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function removeCallback(CallbackContainer $container): void
+    {
+        $this->em->remove($container);
+        $this->em->flush();
     }
 
     /**

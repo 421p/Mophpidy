@@ -4,13 +4,13 @@ use Longman\TelegramBot\Entities\Update;
 use Mophpidy\Api\Library;
 use Mophpidy\Api\Player;
 use Mophpidy\Command\Command;
-use Mophpidy\Telegram\Callback\CallbackContainer;
-use Mophpidy\Telegram\Callback\CallbackStorage;
+use Mophpidy\Entity\CallbackContainer;
+use Mophpidy\Storage\Storage;
 
 return new class('/\/search_(?<command>gmusic|soundcloud)\s(?<query>.+)/') extends Command
 {
 
-    function execute(Update $update, array $matches)
+    function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
         $message = $update->getMessage();
         $query = $matches['query'];
@@ -32,11 +32,15 @@ return new class('/\/search_(?<command>gmusic|soundcloud)\s(?<query>.+)/') exten
                         ]
                     );
                 } else {
-                    $storage = $this->getContainer()->get(CallbackStorage::class);
+                    $storage = $this->getContainer()->get(Storage::class);
 
-                    $callback = CallbackContainer::packTracks($data[0]['tracks']);
+                    $callback = CallbackContainer::pack(
+                        $data[0]['tracks'],
+                        CallbackContainer::TRACKS,
+                        $storage->getUser($message->getChat()->getId())
+                    );
 
-                    $storage->push($callback);
+                    $storage->addCallback($callback);
 
                     $this->sender->sendMessage(
                         [

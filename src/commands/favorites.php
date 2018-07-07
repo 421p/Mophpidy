@@ -3,14 +3,14 @@
 use Longman\TelegramBot\Entities\Update;
 use Mophpidy\Api\Player;
 use Mophpidy\Command\Command;
-use Mophpidy\Telegram\Callback\CallbackContainer;
-use Mophpidy\Telegram\Callback\CallbackStorage;
+use Mophpidy\Entity\CallbackContainer;
+use Mophpidy\Storage\Storage;
 
 return new class('/favou?rites/i') extends Command
 {
-    function execute(Update $update, array $matches)
+    function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
-        $storage = $this->getContainer()->get(CallbackStorage::class);
+        $storage = $this->getContainer()->get(Storage::class);
 
         /** @var Player $player */
         $player = $this->getContainer()->get(Player::class);
@@ -18,8 +18,12 @@ return new class('/favou?rites/i') extends Command
         $player->getLibrary()->getFavorites()->then(
             function (array $data) use ($storage, $update) {
 
-                $callback = CallbackContainer::packTracks($data);
-                $storage->push($callback);
+                $callback = CallbackContainer::pack(
+                    $data,
+                    CallbackContainer::TRACKS,
+                    $storage->getUser($update->getMessage()->getChat()->getId())
+                );
+                $storage->addCallback($callback);
 
                 $this->sender->sendMessage(
                     [

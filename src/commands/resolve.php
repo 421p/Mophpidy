@@ -4,20 +4,17 @@ use Longman\TelegramBot\Entities\Update;
 use Mophpidy\Api\Player;
 use Mophpidy\Behaviour\Browser;
 use Mophpidy\Command\Command;
-use Mophpidy\Telegram\Callback\CallbackContainer;
-use Mophpidy\Telegram\Callback\CallbackStorage;
-use function Functional\map;
+use Mophpidy\Entity\CallbackContainer;
+use Mophpidy\Entity\CallbackPayloadItem;
+use Mophpidy\Storage\Storage;
 
 return new class('/\/resolve (?<id>.+)/i') extends Command
 {
     use Browser;
 
-    function execute(Update $update, array $matches)
+    function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
-        $storage = $this->getContainer()->get(CallbackStorage::class);
-
-        /** @var CallbackContainer $callback */
-        $callback = $storage->remove($matches['id']);
+        $storage = $this->getContainer()->get(Storage::class);
 
         switch ($callback->getType()) {
             case CallbackContainer::TRACKS:
@@ -27,6 +24,8 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
                 $this->handleBrowsing($callback, $update);
                 break;
         }
+
+        $storage->removeCallback($callback);
     }
 
     private function handleBrowsing(CallbackContainer $callback, Update $update)
@@ -37,7 +36,7 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
         $payload = $callback->getPayload();
 
         $index = $callback->getSelectIndex();
-        $uri = $payload[$index]['uri'];
+        $uri = $payload->get($index)->getUri();
 
         $this->sender->answerCallbackQuery($update->getCallbackQuery()->getId())->then(
             function () use ($update, $player, $uri) {
@@ -59,14 +58,13 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
 
         $index = $callback->getSelectIndex();
 
-        $start = $payload[$index]['name'];
+        $start = $payload->get($index)->getName();
 
-        $uris = map(
-            $payload,
-            function (array $song) {
-                return $song['uri'];
+        $uris = $payload->map(
+            function (CallbackPayloadItem $item) {
+                return $item->getUri();
             }
-        );
+        )->toArray();
 
         $first = $uris[$index];
         unset($uris[$index]);
@@ -77,13 +75,6 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
                 $callbackId = $update->getCallbackQuery()->getId();
 
                 $this->sender->answerCallbackQuery($callbackId);
-
-                $this->sender->sendMessageWithDefaultKeyboard(
-                    [
-                        'chat_id' => $update->getCallbackQuery()->getMessage()->getChat()->getId(),
-                        'text' => 'Playing list, starting from '.$start,
-                    ]
-                );
             }
         );
     }
