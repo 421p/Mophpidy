@@ -10,6 +10,19 @@ class StartCommand extends ExtendedSystemCommand
     protected $description = 'Start command';
     protected $usage = '/start';
 
+    private $startMessage = '
+Welcome to <b>Mophpidy</b> 
+
+Some useful commands:
+
+    /enable_notifications - enables notifications about some useful events like a songs switching
+    /disable_notifications - disables notifications
+    /search_gmusic - searches for track on google music
+    /search_soundcloud - searches for track on soundcloud
+    /volume - set a custom value for volume [0-100]
+    /request_access - send a request to be allowed to use bot
+    ';
+
     public function execute()
     {
         $message = $this->getMessage();
@@ -18,10 +31,11 @@ class StartCommand extends ExtendedSystemCommand
 
         $data = [
             'chat_id' => $chat_id,
-            'text' => 'Welcome to Priton',
+            'parse_mode' => 'HTML',
+            'text' => $this->startMessage,
         ];
 
-        $this->sender->sendMessageWithDefaultKeyboard($data);
+        $this->sender->sendMessageWithDefaultKeyboard($data)->then(null, 'dump');
 
         return parent::execute();
     }

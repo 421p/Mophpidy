@@ -2,7 +2,6 @@
 
 namespace Mophpidy\Telegram\Callback;
 
-use Mophpidy\Logging\Log;
 use React\EventLoop\LoopInterface;
 
 class CallbackStorage
@@ -16,7 +15,7 @@ class CallbackStorage
 
     public function push(CallbackContainer $callback)
     {
-        $this->callbacks[$callback->getId()->toString()] = $callback;
+        $this->callbacks[$callback->getId()] = $callback;
     }
 
     public function get(string $id): ?CallbackContainer
@@ -35,8 +34,6 @@ class CallbackStorage
     private function cleanup()
     {
         if (count($this->callbacks) !== 0) {
-            Log::info('Cleaning up storage, current amount of stored callbacks: '.count($this->callbacks));
-
             /** @var CallbackContainer $callback */
             foreach ($this->callbacks as $i => $callback) {
                 if ($callback->getDate()->diff(new \DateTime())->i > 3) {

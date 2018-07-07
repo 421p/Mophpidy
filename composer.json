@@ -11,7 +11,8 @@
     "longman/telegram-bot": "^0.53.0",
     "react/http-client": "^0.5.9",
     "react/stream": "^0.7.7",
-    "symfony/finder": "^4.1"
+    "symfony/finder": "^4.1",
+    "doctrine/orm": "^2.6"
   },
   "require-dev": {
     "symfony/var-dumper": "^4.1"

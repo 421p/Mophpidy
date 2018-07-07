@@ -38,6 +38,10 @@ services:
       - '@Mophpidy\Api\Playback'
       - '@Mophpidy\Api\Mixer'
       - '@Mophpidy\Api\Endpoint'
+      - '@Mophpidy\Telegram\TelegramCommunicator'
+      - '@Mophpidy\Storage\Storage'
+    calls:
+      - ['listenGeneralEvents']
 
   Longman\TelegramBot\Telegram:
     public: true
@@ -63,3 +67,23 @@ services:
   Mophpidy\Telegram\Callback\CallbackStorage:
     arguments: ['@React\EventLoop\LoopInterface']
     public: true
+
+  Mophpidy\Storage\Storage:
+    public: true
+    arguments: ['@Doctrine\ORM\EntityManager']
+
+  Doctrine\ORM\EntityManager:
+    public: true
+    factory:
+      - 'Doctrine\ORM\EntityManager'
+      - 'create'
+    arguments:
+      -
+        driver: pdo_sqlite
+        path: db.sqlite3
+      - '@Doctrine\ORM\Configuration'
+  Doctrine\ORM\Configuration:
+    factory:
+      - 'Doctrine\ORM\Tools\Setup'
+      - 'createAnnotationMetadataConfiguration'
+    arguments: [['src/Entity'], true, null, null, false]

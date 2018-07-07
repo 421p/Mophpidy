@@ -38,7 +38,7 @@ class CallbackqueryCommand extends ExtendedSystemCommand
                 return parent::execute();
             }
 
-            $callback->addPayloadValue('index', $index);
+            $callback->setSelectIndex($index);
 
             /** @var Command $command */
             foreach ($this->holder as $command) {

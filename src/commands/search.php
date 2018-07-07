@@ -7,7 +7,7 @@ use Mophpidy\Command\Command;
 use Mophpidy\Telegram\Callback\CallbackContainer;
 use Mophpidy\Telegram\Callback\CallbackStorage;
 
-return new class('/\/(?<command>search|soundcloud)\s(?<query>.+)/') extends Command
+return new class('/\/search_(?<command>gmusic|soundcloud)\s(?<query>.+)/') extends Command
 {
 
     function execute(Update $update, array $matches)
@@ -15,7 +15,7 @@ return new class('/\/(?<command>search|soundcloud)\s(?<query>.+)/') extends Comm
         $message = $update->getMessage();
         $query = $matches['query'];
 
-        $uris = $matches['command'] === 'soundcloud' ? ['soundcloud:'] : ['gmusic:'];
+        $uris = [$matches['command'].':'];
 
         $player = $this->getContainer()->get(Player::class);
 

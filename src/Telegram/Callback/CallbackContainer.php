@@ -11,24 +11,21 @@ class CallbackContainer
     const TRACKS = 'tracks';
 
     private $id;
-    private $command;
     private $date;
     private $payload;
+    private $selectIndex;
     private $type;
 
     public function __construct($payload = [])
     {
-        $this->id = Uuid::uuid4();
-        $this->command = sprintf('/resolve %s', $this->id->toString());
+        $this->id = Uuid::uuid4()->toString();
         $this->date = new \DateTime();
         $this->payload = $payload;
     }
 
     public static function packTracks(array $data): CallbackContainer
     {
-        $payload = [];
-
-        $payload['songs'] = map(
+        $payload = map(
             $data,
             function (array $song) {
                 return [
@@ -46,9 +43,7 @@ class CallbackContainer
 
     public static function packDirs(array $data): CallbackContainer
     {
-        $payload = [];
-
-        $payload['dirs'] = map(
+        $payload = map(
             $data,
             function (array $dir) {
                 return [
@@ -66,10 +61,8 @@ class CallbackContainer
 
     public function mapInlineKeyboard(): array
     {
-        $key = $this->type === self::DIRECTORIES ? 'dirs' : 'songs';
-
         return map(
-            $this->payload[$key],
+            $this->payload,
             function (array $dir, int $i) {
                 return [
                     [
@@ -81,17 +74,12 @@ class CallbackContainer
         );
     }
 
-    public function addPayloadValue($key, $value)
-    {
-        $this->payload[$key] = $value;
-    }
-
     public function getCommand(): string
     {
-        return $this->command;
+        return sprintf('/resolve %s', $this->id);
     }
 
-    public function getId(): \Ramsey\Uuid\UuidInterface
+    public function getId(): string
     {
         return $this->id;
     }
@@ -114,5 +102,15 @@ class CallbackContainer
     public function setType($type): void
     {
         $this->type = $type;
+    }
+
+    public function getSelectIndex()
+    {
+        return $this->selectIndex;
+    }
+
+    public function setSelectIndex($selectIndex): void
+    {
+        $this->selectIndex = $selectIndex;
     }
 }

@@ -36,8 +36,8 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
 
         $payload = $callback->getPayload();
 
-        $index = $payload['index'];
-        $uri = $payload['dirs'][$index]['uri'];
+        $index = $callback->getSelectIndex();
+        $uri = $payload[$index]['uri'];
 
         $this->sender->answerCallbackQuery($update->getCallbackQuery()->getId())->then(
             function () use ($update, $player, $uri) {
@@ -57,13 +57,12 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
 
         $payload = $callback->getPayload();
 
-        $index = $payload['index'];
-        $songs = $payload['songs'];
+        $index = $callback->getSelectIndex();
 
-        $start = $songs[$index]['name'];
+        $start = $payload[$index]['name'];
 
         $uris = map(
-            $songs,
+            $payload,
             function (array $song) {
                 return $song['uri'];
             }

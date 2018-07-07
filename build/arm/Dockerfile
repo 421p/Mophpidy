@@ -16,6 +16,7 @@ RUN apt-get update \
 ADD vendor /app/vendor
 ADD bot.php /app/index.php
 ADD autoload.php /app/autoload.php
+ADD cli-config.php /app/cli-config.php
 ADD src /app/src
 ADD config /app/config
 

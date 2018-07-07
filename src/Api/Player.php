@@ -3,6 +3,8 @@
 namespace Mophpidy\Api;
 
 use Mophpidy\Logging\Log;
+use Mophpidy\Storage\Storage;
+use Mophpidy\Telegram\TelegramCommunicator;
 use React\Promise as When;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
@@ -14,14 +16,78 @@ class Player
     private $playback;
     private $mixer;
     private $endpoint;
+    private $sender;
+    private $storage;
 
-    public function __construct(Library $library, TrackList $list, Playback $playback, Mixer $mixer, Endpoint $endpoint)
-    {
+    public function __construct(
+        Library $library,
+        TrackList $list,
+        Playback $playback,
+        Mixer $mixer,
+        Endpoint $endpoint,
+        TelegramCommunicator $sender,
+        Storage $storage
+    ) {
         $this->library = $library;
         $this->list = $list;
         $this->playback = $playback;
         $this->mixer = $mixer;
         $this->endpoint = $endpoint;
+        $this->sender = $sender;
+        $this->storage = $storage;
+    }
+
+    public function listenGeneralEvents()
+    {
+        $this->listenMopidyEvent(
+            'track_playback_started',
+            function (array $data) {
+                $track = $data['tl_track']['track'];
+
+                foreach ($this->storage->getNotificationSubscribers() as $user) {
+                    $this->sender->sendMessageWithDefaultKeyboard(
+                        [
+                            'chat_id' => $user->getId(),
+                            'text' => sprintf(
+                                'Current track: %s - %s',
+                                $track['artists'][0]['name'],
+                                $track['name']
+                            ),
+                        ]
+                    )->then(
+                        null,
+                        function (\Throwable $e) {
+                            Log::error($e->getMessage().' '.$e->getTraceAsString());
+                        }
+                    );
+                }
+            }
+        );
+
+        $this->listenMopidyEvent(
+            'playback_state_changed',
+            function ($data) {
+                foreach ($this->storage->getNotificationSubscribers() as $user) {
+                    if ($data['old_state'] !== $data['new_state']) {
+                        $this->sender->sendMessageWithDefaultKeyboard(
+                            [
+                                'chat_id' => $user->getId(),
+                                'text' => sprintf(
+                                    'Stage changed from %s to %s',
+                                    $data['old_state'],
+                                    $data['new_state']
+                                ),
+                            ]
+                        )->then(
+                            null,
+                            function (\Throwable $e) {
+                                Log::error($e->getMessage().' '.$e->getTraceAsString());
+                            }
+                        );
+                    }
+                }
+            }
+        );
     }
 
     public function listenMopidyEvent(string $event, callable $closure)

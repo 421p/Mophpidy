@@ -14,24 +14,6 @@ return new class('/(?<operation>next|previous)/i') extends Command
 
         $operation = strtolower($matches['operation']);
 
-        $player->listenMopidyEventOnce(
-            'track_playback_started',
-            function ($data) use ($chatId) {
-                $track = $data['tl_track']['track'];
-
-                $this->sender->sendMessageWithDefaultKeyboard(
-                    [
-                        'chat_id' => $chatId,
-                        'text' => sprintf(
-                            'Current track: %s - %s',
-                            $track['artists'][0]['name'],
-                            $track['name']
-                        ),
-                    ]
-                );
-            }
-        );
-
         $player->$operation();
     }
 };
