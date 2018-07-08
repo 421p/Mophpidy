@@ -32,6 +32,8 @@ services:
   bot:
     image: 421p/mophpidy
     restart: always
+    volumes:
+      - './data:/app/data' # for data persistence
     environment:
       MOPIDY_URI: 'ws://mopidyhost:6680/mopidy/ws/'
       TELEGRAM_TOKEN: 'TELEGRAM_BOT_TOKEN'
@@ -45,6 +47,12 @@ As you can see you have to provide 4 environment variables:
 * TELEGRAM_TOKEN - bot token
 * BOT_USERNAME - bot username
 * ADMIN - one or more (partial support) telegram user id
+
+For the first installation you have to create a database by running `doctrine` command.
+
+```bash
+docker-compose run bot doctrine orm:sc:cr
+```
 
 ### Non-docker
 
@@ -61,7 +69,11 @@ ADMIN='11223344'
 ```
 composer install
 ```
-3) Run bot
+3) Create database (for a fresh installation only)
+```bash
+./doctrine orm:sc:cr
+```
+4) Run bot
 ```
 php bot.php
 ```

@@ -14,6 +14,9 @@ RUN apt-get update \
     && mkdir -p /app/data && touch /app/.env
 
 ADD vendor /app/vendor
+ADD doctrine /app/doctrine
+RUN ln -s /app/doctrine /usr/bin/doctrine
+ADD migrations /app/migrations
 ADD bot.php /app/index.php
 ADD autoload.php /app/autoload.php
 ADD cli-config.php /app/cli-config.php
