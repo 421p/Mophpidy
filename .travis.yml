@@ -27,6 +27,9 @@ deploy:
   script: bash docker-deploy
   on:
     branch: master
+cache:
+  directories:
+  - vendor
 env:
   global:
   - APP_VERSION=$(cat composer.json | jq -r '.version')

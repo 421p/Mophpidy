@@ -11,7 +11,7 @@ RUN apt-get update \
     && docker-php-ext-enable event \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir /app && touch /app/.env
+    && mkdir -p /app/data && touch /app/.env
 
 ADD vendor /app/vendor
 ADD bot.php /app/index.php
@@ -19,5 +19,7 @@ ADD autoload.php /app/autoload.php
 ADD cli-config.php /app/cli-config.php
 ADD src /app/src
 ADD config /app/config
+
+WORKDIR /app
 
 CMD ["php", "/app/index.php"]

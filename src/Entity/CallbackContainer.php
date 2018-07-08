@@ -13,8 +13,8 @@ use function Functional\map;
  */
 class CallbackContainer
 {
-    const DIRECTORIES = 'dirs';
-    const TRACKS = 'tracks';
+    const DIRECTORIES = 1;
+    const TRACKS = 2;
 
     /**
      * @ORM\Column(name="id", type="string")
@@ -29,7 +29,7 @@ class CallbackContainer
      * @ORM\OneToMany(targetEntity="CallbackPayloadItem", mappedBy="callback", cascade={"persist", "remove"})
      */
     protected $payload;
-    /** @ORM\Column(name="type", type="string") */
+    /** @ORM\Column(name="type", type="integer") */
     protected $type;
     /**
      * @var User

@@ -85,7 +85,7 @@ services:
     arguments:
       -
         driver: pdo_sqlite
-        path: db.sqlite3
+        path: data/db.sqlite3
       - '@Doctrine\ORM\Configuration'
   Doctrine\ORM\Configuration:
     factory:
