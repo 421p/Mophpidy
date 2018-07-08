@@ -2,6 +2,7 @@ formatters:
     dashed:
         class: Monolog\Formatter\LineFormatter
         format: "[%datetime%][%extra.memory_usage%] %level_name% - %message%\n"
+        include_stacktraces: true
 handlers:
     console:
         class: Monolog\Handler\StreamHandler

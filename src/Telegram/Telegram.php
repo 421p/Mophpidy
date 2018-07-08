@@ -47,14 +47,14 @@ class Telegram extends \Longman\TelegramBot\Telegram
 
                         $this->offset = $update->getUpdateId() + 1;
                     } catch (\Throwable $e) {
-                        Log::error($e->getMessage().' '.$e->getTraceAsString());
+                        Log::error($e);
                     }
                 }
 
                 $this->handle();
             },
             function (\Exception $e) {
-                Log::error($e->getMessage());
+                Log::error($e);
             }
         );
     }

@@ -53,11 +53,11 @@ trait Browser
                     }
 
                 } catch (\Throwable $e) {
-                    dump($e);
+                    Log::error($e);
                 }
             },
             function (\Throwable $e) {
-                Log::error($e->__toString());
+                Log::error($e);
             }
         );
     }

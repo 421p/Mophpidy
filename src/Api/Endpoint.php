@@ -65,7 +65,11 @@ class Endpoint
         $listener = function (array $data) use (&$listener, $uuid, $defer) {
             if (isset($data['id']) && $data['id'] === $uuid->toString()) {
 
-                $defer->resolve($data['result']);
+                if (isset($data['result'])) {
+                    $defer->resolve($data['result']);
+                } else {
+                    $defer->reject(new \Exception($data['error']['data']['message']));
+                }
 
                 $this->removeListener(self::MESSAGE, $listener);
             }

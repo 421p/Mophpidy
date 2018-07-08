@@ -57,7 +57,7 @@ class Player
                     )->then(
                         null,
                         function (\Throwable $e) {
-                            Log::error($e->getMessage().' '.$e->getTraceAsString());
+                            Log::error($e);
                         }
                     );
                 }
@@ -81,7 +81,7 @@ class Player
                         )->then(
                             null,
                             function (\Throwable $e) {
-                                Log::error($e->getMessage().' '.$e->getTraceAsString());
+                                Log::error($e);
                             }
                         );
                     }
