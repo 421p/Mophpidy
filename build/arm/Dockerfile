@@ -15,7 +15,9 @@ RUN apt-get update \
 
 ADD vendor /app/vendor
 ADD doctrine /app/doctrine
-RUN ln -s /app/doctrine /usr/bin/doctrine
+
+RUN ln -s /app/doctrine /usr/bin/doctrine && chmod +x /app/doctrine
+
 ADD migrations /app/migrations
 ADD bot.php /app/index.php
 ADD autoload.php /app/autoload.php
