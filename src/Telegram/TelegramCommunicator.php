@@ -161,7 +161,7 @@ class TelegramCommunicator
 
         $request->on(
             'response',
-            function (Response $response) use ($defer) {
+            function (Response $response) use ($defer, $data) {
 
                 $stream = fopen('php://memory', 'rw');
 
@@ -174,15 +174,15 @@ class TelegramCommunicator
 
                 $response->on(
                     'end',
-                    function () use ($stream, $defer) {
+                    function () use ($stream, $defer, $data) {
                         rewind($stream);
 
-                        $data = json_decode(stream_get_contents($stream), true);
+                        $response = json_decode(stream_get_contents($stream), true);
 
-                        if ($data['ok'] === true) {
-                            $defer->resolve($data['result']);
+                        if ($response['ok'] === true) {
+                            $defer->resolve($response['result']);
                         } else {
-                            $defer->reject(new \Exception($data['description']));
+                            $defer->reject(new \Exception($response['description'].' Payload: '.$data));
                         }
 
                         fclose($stream);

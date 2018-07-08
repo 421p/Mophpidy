@@ -3,7 +3,6 @@
 namespace Longman\TelegramBot\Commands\SystemCommands;
 
 use Mophpidy\Command\Command;
-use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Storage\Storage;
 use Mophpidy\Telegram\ExtendedSystemCommand;
 
@@ -61,10 +60,6 @@ class CallbackqueryCommand extends ExtendedSystemCommand
 
                 if ($command->match($callback->getCommand(), $matches)) {
                     $command->execute($this->getUpdate(), $matches, $callback);
-                }
-
-                if ($callback->getType() === CallbackContainer::TRACKS) {
-                    $this->sender->deleteMessage($chatId, $messageId);
                 }
             }
 

@@ -7,6 +7,9 @@ use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Entity\CallbackPayloadItem;
 use Mophpidy\Storage\Storage;
+use React\Promise as When;
+use React\Promise\Deferred;
+use React\Promise\PromiseInterface;
 
 return new class('/\/resolve (?<id>.+)/i') extends Command
 {
@@ -14,22 +17,29 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
 
     function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
-        $storage = $this->getContainer()->get(Storage::class);
-
         switch ($callback->getType()) {
             case CallbackContainer::TRACKS:
-                $this->handlePlaying($callback, $update);
+                $promise = $this->handlePlaying($callback, $update);
                 break;
             case CallbackContainer::DIRECTORIES:
-                $this->handleBrowsing($callback, $update);
+                $promise = $this->handleBrowsing($callback, $update);
                 break;
+            default:
+                throw new \RuntimeException('Unknown type of callback.');
         }
 
-        $storage->removeCallback($callback);
+        $promise->then(
+            function () use ($callback) {
+                $storage = $this->getContainer()->get(Storage::class);
+                $storage->removeCallback($callback);
+            }
+        );
     }
 
-    private function handleBrowsing(CallbackContainer $callback, Update $update)
+    private function handleBrowsing(CallbackContainer $callback, Update $update): PromiseInterface
     {
+        $defer = new Deferred();
+
         /** @var Player $player */
         $player = $this->getContainer()->get(Player::class);
 
@@ -39,18 +49,28 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
         $uri = $payload->get($index)->getUri();
 
         $this->sender->answerCallbackQuery($update->getCallbackQuery()->getId())->then(
-            function () use ($update, $player, $uri) {
+            function () use ($update, $player, $uri, $defer) {
 
                 $chatId = $update->getCallbackQuery()->getMessage()->getChat()->getId();
                 $messageId = $update->getCallbackQuery()->getMessage()->getMessageId();
 
-                $this->browse($update, $player, $chatId, $messageId, $uri);
-            }
+                try {
+                    $this->browse($update, $player, $chatId, $messageId, $uri);
+                    $defer->resolve();
+                } catch (\Throwable $e) {
+                    $defer->reject($e);
+                }
+            },
+            \Closure::fromCallable([$defer, 'reject'])
         );
+
+        return $defer->promise();
     }
 
-    private function handlePlaying(CallbackContainer $callback, Update $update)
+    private function handlePlaying(CallbackContainer $callback, Update $update): PromiseInterface
     {
+        $defer = new Deferred();
+
         /** @var Player $player */
         $player = $this->getContainer()->get(Player::class);
 
@@ -71,11 +91,22 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
         array_unshift($uris, $first);
 
         $player->playList($uris)->then(
-            function () use ($update, $callback, $start) {
+            function () use ($update, $callback, $start, $defer) {
                 $callbackId = $update->getCallbackQuery()->getId();
 
-                $this->sender->answerCallbackQuery($callbackId);
-            }
+                When\all(
+                    [
+                        $this->sender->answerCallbackQuery($callbackId),
+                        $this->sender->deleteMessage($callback->getUser()->getId(), $callback->getMessageId()),
+                    ]
+                )->then(
+                    \Closure::fromCallable([$defer, 'resolve']),
+                    \Closure::fromCallable([$defer, 'reject'])
+                );
+            },
+            \Closure::fromCallable([$defer, 'reject'])
         );
+
+        return $defer->promise();
     }
 };

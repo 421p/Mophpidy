@@ -21,10 +21,13 @@ return new class('/favou?rites/i') extends Command
                 $callback = CallbackContainer::pack(
                     $data,
                     CallbackContainer::TRACKS,
-                    $storage->getUser($update->getMessage()->getChat()->getId()),
-                    $update->getMessage()->getMessageId()
+                    $storage->getUser($update->getMessage()->getChat()->getId())
                 );
-                $storage->addCallback($callback);
+
+                $handler = function (array $data) use ($storage, $callback) {
+                    $callback->setMessageId($data['message_id']);
+                    $storage->addCallback($callback);
+                };
 
                 $this->sender->sendMessage(
                     [
@@ -34,7 +37,7 @@ return new class('/favou?rites/i') extends Command
                         'chat_id' => $update->getMessage()->getChat()->getId(),
                         'text' => 'List of favorite background songs:',
                     ]
-                );
+                )->then($handler);
             },
             'dump'
         );

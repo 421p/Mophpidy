@@ -45,13 +45,12 @@ class CallbackContainer
         $this->payload = new ArrayCollection();
     }
 
-    public static function pack(array $data, string $type, User $user, int $messageId): CallbackContainer
+    public static function pack(array $data, string $type, User $user): CallbackContainer
     {
         $callback = new CallbackContainer();
         $callback->setId(Uuid::uuid4()->toString());
         $callback->setDate(new \DateTime());
         $callback->setUser($user);
-        $callback->setMessageId($messageId);
 
         $callback->setType($type);
 

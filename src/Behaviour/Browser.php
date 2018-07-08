@@ -32,16 +32,19 @@ trait Browser
                     /** @var Storage $storage */
                     $storage = $this->getContainer()->get(Storage::class);
 
-                    $callback = CallbackContainer::pack($data, $type, $storage->getUser($chatId), $messageId);
+                    $callback = CallbackContainer::pack($data, $type, $storage->getUser($chatId));
 
-                    $storage->addCallback($callback);
+                    $handler = function (array $data) use ($storage, $callback) {
+                        $callback->setMessageId($data['message_id']);
+                        $storage->addCallback($callback);
+                    };
 
                     $markup = [
                         'inline_keyboard' => $callback->mapInlineKeyboard(),
                     ];
 
                     if ($inProgress) {
-                        $this->sender->editMessageReplyMarkup($chatId, $messageId, $markup);
+                        $this->sender->editMessageReplyMarkup($chatId, $messageId, $markup)->then($handler);
                     } else {
                         $this->sender->sendMessage(
                             [
@@ -49,7 +52,7 @@ trait Browser
                                 'chat_id' => $update->getMessage()->getChat()->getId(),
                                 'text' => 'Directories:',
                             ]
-                        );
+                        )->then($handler);
                     }
 
                 } catch (\Throwable $e) {

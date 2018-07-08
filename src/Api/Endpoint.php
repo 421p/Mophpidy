@@ -65,7 +65,7 @@ class Endpoint
         $listener = function (array $data) use (&$listener, $uuid, $defer) {
             if (isset($data['id']) && $data['id'] === $uuid->toString()) {
 
-                if (isset($data['result'])) {
+                if (array_key_exists('result', $data)) {
                     $defer->resolve($data['result']);
                 } else {
                     $defer->reject(new \Exception($data['error']['data']['message']));

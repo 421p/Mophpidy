@@ -37,11 +37,13 @@ return new class('/\/search_(?<command>gmusic|soundcloud)\s(?<query>.+)/') exten
                     $callback = CallbackContainer::pack(
                         $data[0]['tracks'],
                         CallbackContainer::TRACKS,
-                        $storage->getUser($message->getChat()->getId()),
-                        $message->getMessageId()
+                        $storage->getUser($message->getChat()->getId())
                     );
 
-                    $storage->addCallback($callback);
+                    $handler = function (array $data) use ($storage, $callback) {
+                        $callback->setMessageId($data['message_id']);
+                        $storage->addCallback($callback);
+                    };
 
                     $this->sender->sendMessage(
                         [
@@ -51,7 +53,7 @@ return new class('/\/search_(?<command>gmusic|soundcloud)\s(?<query>.+)/') exten
                             'chat_id' => $message->getChat()->getId(),
                             'text' => 'Found:',
                         ]
-                    );
+                    )->then($handler);
                 }
             }
         );
