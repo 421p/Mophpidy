@@ -129,7 +129,7 @@ class TelegramCommunicator
         );
     }
 
-    public function answerCallbackQuery(int $id, array $payload = []): PromiseInterface
+    public function answerCallbackQuery(string $id, array $payload = []): PromiseInterface
     {
         $payload['callback_query_id'] = $id;
 
