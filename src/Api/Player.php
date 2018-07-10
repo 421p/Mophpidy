@@ -11,6 +11,9 @@ use React\Promise\PromiseInterface;
 
 class Player
 {
+    const TRACK_PLAYBACK_STARTED = 'track_playback_started';
+    const PLAYBACK_STATE_CHANGED = 'playback_state_changed';
+
     private $library;
     private $list;
     private $playback;
@@ -18,6 +21,11 @@ class Player
     private $endpoint;
     private $sender;
     private $storage;
+
+    private $eventsCache = [
+        self::TRACK_PLAYBACK_STARTED => null,
+        self::PLAYBACK_STATE_CHANGED => null,
+    ];
 
     public function __construct(
         Library $library,
@@ -40,32 +48,36 @@ class Player
     public function listenGeneralEvents()
     {
         $this->listenMopidyEvent(
-            'track_playback_started',
+            self::TRACK_PLAYBACK_STARTED,
             function (array $data) {
                 $track = $data['tl_track']['track'];
 
-                foreach ($this->storage->getNotificationSubscribers() as $user) {
-                    $this->sender->sendMessageWithDefaultKeyboard(
-                        [
-                            'chat_id' => $user->getId(),
-                            'text' => sprintf(
-                                'Current track: %s - %s',
-                                $track['artists'][0]['name'],
-                                $track['name']
-                            ),
-                        ]
-                    )->then(
-                        null,
-                        function (\Throwable $e) {
-                            Log::error($e);
-                        }
-                    );
+                if ($this->eventsCache[self::TRACK_PLAYBACK_STARTED] !== $track) {
+                    $this->eventsCache[self::TRACK_PLAYBACK_STARTED] = $track;
+
+                    foreach ($this->storage->getNotificationSubscribers() as $user) {
+                        $this->sender->sendMessageWithDefaultKeyboard(
+                            [
+                                'chat_id' => $user->getId(),
+                                'text' => sprintf(
+                                    'Current track: %s - %s',
+                                    $track['artists'][0]['name'],
+                                    $track['name']
+                                ),
+                            ]
+                        )->then(
+                            null,
+                            function (\Throwable $e) {
+                                Log::error($e);
+                            }
+                        );
+                    }
                 }
             }
         );
 
         $this->listenMopidyEvent(
-            'playback_state_changed',
+            self::PLAYBACK_STATE_CHANGED,
             function ($data) {
                 foreach ($this->storage->getNotificationSubscribers() as $user) {
                     if ($data['old_state'] !== $data['new_state']) {
