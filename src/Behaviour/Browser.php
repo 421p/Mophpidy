@@ -29,10 +29,29 @@ trait Browser
 
                     $type = $data[0]['type'] === 'directory' ? CallbackContainer::DIRECTORIES : CallbackContainer::TRACKS;
 
+                    /**
+                     * Unique directories: workaround for bug with gmusic directories
+                     */
+
+                    $processed = [];
+
+                    for ($names = [], $i = 0, $limit = count($data); $i < $limit; $i++) {
+                        $item = $data[$i];
+                        $name = $item['name'];
+
+                        if (!in_array($name, $names)) {
+                            $names[] = $name;
+
+                            $item['name'] = preg_replace('/^(\d+\s\-\s,)/', '', $name);
+
+                            $processed[] = $item;
+                        }
+                    }
+
                     /** @var Storage $storage */
                     $storage = $this->getContainer()->get(Storage::class);
 
-                    $callback = CallbackContainer::pack($data, $type, $storage->getUser($chatId));
+                    $callback = CallbackContainer::pack($processed, $type, $storage->getUser($chatId));
 
                     $handler = function (array $data) use ($storage, $callback) {
                         $callback->setMessageId($data['message_id']);
