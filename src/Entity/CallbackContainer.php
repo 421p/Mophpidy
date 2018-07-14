@@ -16,6 +16,9 @@ class CallbackContainer
     const DIRECTORIES = 1;
     const TRACKS = 2;
 
+    const DELETE = -1;
+    const BACKWARD = -2;
+
     /**
      * @ORM\Column(name="id", type="string")
      * @ORM\Id
@@ -25,6 +28,17 @@ class CallbackContainer
     protected $date;
     /** @ORM\Column(name="message_id", type="integer") */
     protected $messageId;
+
+    /**
+     * @var CallbackContainer
+     * @ORM\ManyToOne(targetEntity="CallbackContainer", inversedBy="children")
+     * @ORM\JoinColumn(name="parent_id", referencedColumnName="id", onDelete="CASCADE", nullable=true)
+     */
+    protected $parent;
+    /**
+     * @ORM\OneToMany(targetEntity="CallbackContainer", mappedBy="children", cascade={"persist", "remove"})
+     */
+    protected $children;
     /**
      * @ORM\OneToMany(targetEntity="CallbackPayloadItem", mappedBy="callback", cascade={"persist", "remove"})
      */
@@ -42,6 +56,7 @@ class CallbackContainer
 
     public function __construct()
     {
+        $this->children = new ArrayCollection();
         $this->payload = new ArrayCollection();
     }
 
@@ -89,9 +104,21 @@ class CallbackContainer
         $buttons[] = [
             [
                 'text' => '❌ Close',
-                'callback_data' => sprintf('%s:%d', $this->id, -1),
+                'callback_data' => sprintf('%s:%d', $this->id, self::DELETE),
             ],
         ];
+
+        if ($this->hasParent()) {
+            array_unshift(
+                $buttons,
+                [
+                    [
+                        'text' => '⬅️Back',
+                        'callback_data' => sprintf('%s:%d', $this->id, self::BACKWARD),
+                    ],
+                ]
+            );
+        }
 
         return $buttons;
     }
@@ -165,5 +192,52 @@ class CallbackContainer
     public function setMessageId($messageId): void
     {
         $this->messageId = $messageId;
+    }
+
+    public function getChildren()
+    {
+        return $this->children;
+    }
+
+    public function getRoot(): CallbackContainer
+    {
+        $root = $this;
+
+        while (($parent = $root->getParent()) !== null) {
+            $root = $parent;
+        }
+
+        return $root;
+    }
+
+    public function purgeChildren()
+    {
+        $this->children->clear();
+    }
+
+    public function hasChildren(): bool
+    {
+        return $this->children->count() !== 0;
+    }
+
+    public function hasParent(): bool
+    {
+        return $this->getParent() !== null;
+    }
+
+    public function getParent(): ?CallbackContainer
+    {
+        return $this->parent;
+    }
+
+    public function setParent(CallbackContainer $parent)
+    {
+        $this->parent = $parent;
+    }
+
+    public function addChild(CallbackContainer $child)
+    {
+        $this->children->add($child);
+        $child->setParent($this);
     }
 }

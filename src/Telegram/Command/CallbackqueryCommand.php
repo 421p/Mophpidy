@@ -3,6 +3,7 @@
 namespace Longman\TelegramBot\Commands\SystemCommands;
 
 use Mophpidy\Command\Command;
+use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Storage\Storage;
 use Mophpidy\Telegram\ExtendedSystemCommand;
 
@@ -43,16 +44,21 @@ class CallbackqueryCommand extends ExtendedSystemCommand
                 return parent::execute();
             }
 
-            if (intval($index) === -1) {
-                $this->sender->answerCallbackQuery($this->getUpdate()->getCallbackQuery()->getId());
+            switch (intval($index)) {
+                case CallbackContainer::DELETE:
+                    $this->sender->answerCallbackQuery($this->getUpdate()->getCallbackQuery()->getId());
 
-                $this->sender->deleteMessage($chatId, $messageId);
-                $storage->removeCallback($callback);
+                    $this->sender->deleteMessage($chatId, $messageId);
+                    $storage->removeCallback($callback->getRoot());
 
-                return parent::execute();
+                    return parent::execute();
+
+                case CallbackContainer::BACKWARD:
+                    $callback = $callback->getParent();
+                    break;
+                default:
+                    $callback->setSelectIndex($index);
             }
-
-            $callback->setSelectIndex($index);
 
             /** @var Command $command */
             foreach ($this->holder as $command) {

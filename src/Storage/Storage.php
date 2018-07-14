@@ -190,4 +190,12 @@ class Storage
 
         $this->em->flush();
     }
+
+    /**
+     * @return EntityManager
+     */
+    public function getEm(): EntityManager
+    {
+        return $this->em;
+    }
 }

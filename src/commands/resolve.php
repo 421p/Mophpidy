@@ -19,21 +19,17 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
     {
         switch ($callback->getType()) {
             case CallbackContainer::TRACKS:
-                $promise = $this->handlePlaying($callback, $update);
+                $this->handlePlaying($callback, $update)->then(function () use ($callback) {
+                    $storage = $this->getContainer()->get(Storage::class);
+                    $storage->removeCallback($callback->getRoot());
+                });
                 break;
             case CallbackContainer::DIRECTORIES:
-                $promise = $this->handleBrowsing($callback, $update);
+                $this->handleBrowsing($callback, $update);
                 break;
             default:
                 throw new \RuntimeException('Unknown type of callback.');
         }
-
-        $promise->then(
-            function () use ($callback) {
-                $storage = $this->getContainer()->get(Storage::class);
-                $storage->removeCallback($callback);
-            }
-        );
     }
 
     private function handleBrowsing(CallbackContainer $callback, Update $update): PromiseInterface
@@ -46,16 +42,16 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
         $payload = $callback->getPayload();
 
         $index = $callback->getSelectIndex();
-        $uri = $payload->get($index)->getUri();
+        $uri = $index !== null ? $payload->get($index)->getUri() : null;
 
         $this->sender->answerCallbackQuery($update->getCallbackQuery()->getId())->then(
-            function () use ($update, $player, $uri, $defer) {
+            function () use ($update, $player, $uri, $defer, $callback) {
 
                 $chatId = $update->getCallbackQuery()->getMessage()->getChat()->getId();
                 $messageId = $update->getCallbackQuery()->getMessage()->getMessageId();
 
                 try {
-                    $this->browse($update, $player, $chatId, $messageId, $uri);
+                    $this->browse($update, $player, $chatId, $messageId, $uri, $callback);
                     $defer->resolve();
                 } catch (\Throwable $e) {
                     $defer->reject($e);

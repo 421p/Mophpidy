@@ -16,14 +16,20 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 trait Browser
 {
-    protected function browse(Update $update, Player $player, $chatId, $messageId, $uri = null)
-    {
+    protected function browse(
+        Update $update,
+        Player $player,
+        $chatId,
+        $messageId,
+        $uri = null,
+        CallbackContainer $parentCallback = null
+    ) {
         $library = $player->getLibrary();
 
         $inProgress = $uri !== null;
 
         $library->browse($uri)->then(
-            function (array $data) use ($update, $inProgress, $chatId, $messageId) {
+            function (array $data) use ($update, $inProgress, $chatId, $messageId, $parentCallback) {
 
                 try {
 
@@ -51,7 +57,22 @@ trait Browser
                     /** @var Storage $storage */
                     $storage = $this->getContainer()->get(Storage::class);
 
-                    $callback = CallbackContainer::pack($processed, $type, $storage->getUser($chatId));
+                    if ($parentCallback !== null && $parentCallback->hasChildren()) {
+                        $callback = $parentCallback;
+                        foreach ($callback->getChildren() as $child) {
+                            $storage->removeCallback($child);
+                        }
+                    } else {
+                        $callback = CallbackContainer::pack(
+                            $processed,
+                            $type,
+                            $storage->getUser($chatId)
+                        );
+
+                        if ($parentCallback !== null) {
+                            $parentCallback->addChild($callback);
+                        }
+                    }
 
                     $handler = function (array $data) use ($storage, $callback) {
                         $callback->setMessageId($data['message_id']);
