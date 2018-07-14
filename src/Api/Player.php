@@ -45,6 +45,11 @@ class Player
         $this->storage = $storage;
     }
 
+    public function getQueue(): PromiseInterface
+    {
+        return $this->list->getTracks();
+    }
+
     public function listenGeneralEvents()
     {
         $this->listenMopidyEvent(
@@ -230,6 +235,11 @@ class Player
     public function pause(): PromiseInterface
     {
         return $this->playback->pause();
+    }
+
+    public function getCurrentTlId(): PromiseInterface
+    {
+        return $this->playback->getCurrentTlId();
     }
 
     public function getCurrentTrack(): PromiseInterface

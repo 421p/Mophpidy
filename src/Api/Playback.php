@@ -62,4 +62,9 @@ class Playback
     {
         return $this->endpoint->ask('core.playback.get_current_track');
     }
+
+    public function getCurrentTlId(): PromiseInterface
+    {
+        return $this->endpoint->ask('core.playback.get_current_tlid');
+    }
 }

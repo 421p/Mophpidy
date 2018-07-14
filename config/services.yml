@@ -2,6 +2,7 @@ parameters:
   keyboard.default:
     -
       - '❤️ Favorites'
+      - '🚦 Queue'
       - '📂 Browse'
     -
       - '◀️Previous'

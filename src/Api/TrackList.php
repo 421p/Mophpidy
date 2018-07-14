@@ -13,6 +13,11 @@ class TrackList
         $this->endpoint = $endpoint;
     }
 
+    public function getTracks(): PromiseInterface
+    {
+        return $this->endpoint->ask('core.tracklist.get_tracks');
+    }
+
     public function getSingle(): PromiseInterface
     {
         return $this->endpoint->ask('core.tracklist.get_single');
