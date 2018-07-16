@@ -60,15 +60,22 @@ class Player
                 if ($this->eventsCache[self::TRACK_PLAYBACK_STARTED] !== $track) {
                     $this->eventsCache[self::TRACK_PLAYBACK_STARTED] = $track;
 
+                    $text = str_replace(
+                        '.mp3',
+                        '',
+                        array_key_exists('artists', $track) ?
+                            sprintf(
+                                'Current track: %s - %s',
+                                $track['artists'][0]['name'],
+                                $track['name']
+                            ) : sprintf('Current track: %s', $track['name'])
+                    );
+
                     foreach ($this->storage->getNotificationSubscribers() as $user) {
                         $this->sender->sendMessageWithDefaultKeyboard(
                             [
                                 'chat_id' => $user->getId(),
-                                'text' => sprintf(
-                                    'Current track: %s - %s',
-                                    $track['artists'][0]['name'],
-                                    $track['name']
-                                ),
+                                'text' => $text,
                             ]
                         )->then(
                             null,
