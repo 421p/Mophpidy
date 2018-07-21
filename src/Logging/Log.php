@@ -20,9 +20,7 @@ class Log
      * System is unusable.
      *
      * @param string $message
-     * @param array $context
-     *
-     * @return void
+     * @param array  $context
      */
     public static function emergency($message, array $context = array())
     {
@@ -36,9 +34,7 @@ class Log
      * trigger the SMS alerts and wake you up.
      *
      * @param string $message
-     * @param array $context
-     *
-     * @return void
+     * @param array  $context
      */
     public static function alert($message, array $context = array())
     {
@@ -51,9 +47,7 @@ class Log
      * Example: Application component unavailable, unexpected exception.
      *
      * @param string $message
-     * @param array $context
-     *
-     * @return void
+     * @param array  $context
      */
     public static function critical($message, array $context = array())
     {
@@ -65,9 +59,7 @@ class Log
      * be logged and monitored.
      *
      * @param string $message
-     * @param array $context
-     *
-     * @return void
+     * @param array  $context
      */
     public static function error($message, array $context = array())
     {
@@ -81,9 +73,7 @@ class Log
      * that are not necessarily wrong.
      *
      * @param string $message
-     * @param array $context
-     *
-     * @return void
+     * @param array  $context
      */
     public static function warning($message, array $context = array())
     {
@@ -94,9 +84,7 @@ class Log
      * Normal but significant events.
      *
      * @param string $message
-     * @param array $context
-     *
-     * @return void
+     * @param array  $context
      */
     public static function notice($message, array $context = array())
     {
@@ -109,9 +97,7 @@ class Log
      * Example: User logs in, SQL logs.
      *
      * @param string $message
-     * @param array $context
-     *
-     * @return void
+     * @param array  $context
      */
     public static function info($message, array $context = array())
     {
@@ -122,9 +108,7 @@ class Log
      * Detailed debug information.
      *
      * @param string $message
-     * @param array $context
-     *
-     * @return void
+     * @param array  $context
      */
     public static function debug($message, array $context = array())
     {
@@ -134,11 +118,9 @@ class Log
     /**
      * Logs with an arbitrary level.
      *
-     * @param mixed $level
+     * @param mixed  $level
      * @param string $message
-     * @param array $context
-     *
-     * @return void
+     * @param array  $context
      */
     public static function log($level, $message, array $context = array())
     {

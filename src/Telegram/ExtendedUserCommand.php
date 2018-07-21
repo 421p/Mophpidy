@@ -14,19 +14,17 @@ abstract class ExtendedUserCommand extends UserCommand
 
     protected $sender;
     protected $holder;
-    protected $storage;
 
     public function __construct(Telegram $telegram, Update $update = null)
     {
         $this->sender = $this->getContainer()->get(TelegramCommunicator::class);
         $this->holder = $this->getContainer()->get(CommandHolder::class);
-        $this->storage = $this->getContainer()->get(Storage::class);
 
         parent::__construct($telegram, $update);
     }
 
-    protected function isUserAllowed(int $id)
+    protected function getStorage(): Storage
     {
-        return $this->storage->isUserAllowed($id);
+        return $this->getContainer()->get(Storage::class);
     }
 }

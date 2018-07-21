@@ -43,9 +43,8 @@ services:
       - '@Mophpidy\Api\Mixer'
       - '@Mophpidy\Api\Endpoint'
       - '@Mophpidy\Telegram\TelegramCommunicator'
-      - '@Mophpidy\Storage\Storage'
     calls:
-      - ['listenGeneralEvents']
+      - ['listenGeneralEvents', ['@service_container']]
 
   Longman\TelegramBot\Telegram:
     public: true
@@ -74,22 +73,36 @@ services:
 
   Mophpidy\Storage\Storage:
     public: true
+    shared: false
     arguments: ['@Doctrine\ORM\EntityManager']
     calls:
       - ['updateAdmins']
 
   Doctrine\ORM\EntityManager:
+    shared: false
     public: true
     factory:
       - 'Doctrine\ORM\EntityManager'
       - 'create'
     arguments:
       -
-        driver: pdo_sqlite
-        path: data/db.sqlite3
+        driver: pdo_mysql
+        host: mysql
+        user: root
+        password: secure-password
+        dbname: mophpidy
+        server_version: 8.0.11
       - '@Doctrine\ORM\Configuration'
   Doctrine\ORM\Configuration:
     factory:
       - 'Doctrine\ORM\Tools\Setup'
       - 'createAnnotationMetadataConfiguration'
-    arguments: [['src/Entity'], true, null, null, false]
+    arguments: [['src/Entity'], true, null, '@Doctrine\Common\Cache\RedisCache', false]
+
+  Redis:
+    class: Redis
+    calls:
+      - [connect, ['redis', 6379]]
+  Doctrine\Common\Cache\RedisCache:
+    calls:
+      - [setRedis, ['@Redis']]

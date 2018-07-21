@@ -45,9 +45,8 @@ class TelegramCommunicator
             ]
         )->then(
             function (array $values) use ($defer) {
-
-                $single = array_shift($values) === true ? '✅ Single' : '❌ Single';
-                $repeat = array_shift($values) === true ? '✅ Repeat' : '❌ Repeat';
+                $single = true === array_shift($values) ? '✅ Single' : '❌ Single';
+                $repeat = true === array_shift($values) ? '✅ Repeat' : '❌ Repeat';
 
                 $state = array_shift($values);
 
@@ -157,12 +156,11 @@ class TelegramCommunicator
                 'Content-Type' => 'application/json',
                 'Content-Length' => strlen($data),
             ]
-        );;
+        );
 
         $request->on(
             'response',
             function (Response $response) use ($defer, $data) {
-
                 $stream = fopen('php://memory', 'rw');
 
                 $response->on(
@@ -179,7 +177,7 @@ class TelegramCommunicator
 
                         $response = json_decode(stream_get_contents($stream), true);
 
-                        if ($response['ok'] === true) {
+                        if (true === $response['ok']) {
                             $defer->resolve($response['result']);
                         } else {
                             $defer->reject(new \Exception($response['description'].' Payload: '.$data));

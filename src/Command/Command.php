@@ -22,10 +22,10 @@ abstract class Command
 
     public function match(string $text, array &$matches): bool
     {
-        return preg_match($this->regex, $text, $matches) === 1;
+        return 1 === preg_match($this->regex, $text, $matches);
     }
 
-    abstract function execute(Update $update, array $matches, CallbackContainer $callback = null);
+    abstract public function execute(Update $update, array $matches, CallbackContainer $callback = null);
 
     public function getRegex(): string
     {

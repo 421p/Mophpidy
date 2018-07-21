@@ -64,7 +64,6 @@ class Endpoint
 
         $listener = function (array $data) use (&$listener, $uuid, $defer) {
             if (isset($data['id']) && $data['id'] === $uuid->toString()) {
-
                 if (array_key_exists('result', $data)) {
                     $defer->resolve($data['result']);
                 } else {
@@ -85,7 +84,7 @@ class Endpoint
     public function tell(string $procedure, array $payload = [], $id = null): void
     {
         $sender = function () use ($procedure, $payload, &$sender, $id) {
-            if ($this->conn === null) {
+            if (null === $this->conn) {
                 $this->loop->addTimer(1, $sender);
             } else {
                 $this->conn->send(
@@ -129,5 +128,4 @@ class Endpoint
 
         $this->emit(self::CONNECTED);
     }
-
 }

@@ -1,5 +1,5 @@
 .env
 .idea/
 vendor/
-docker-compose.yml
 data/db.sqlite3
+.php_cs.cache

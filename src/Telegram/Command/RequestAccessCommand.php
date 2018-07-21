@@ -12,9 +12,10 @@ class RequestAccessCommand extends ExtendedUserCommand
     protected $name = 'request_access';
 
     /**
-     * Execute command
+     * Execute command.
      *
      * @return \Longman\TelegramBot\Entities\ServerResponse
+     *
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\TransactionRequiredException
@@ -32,10 +33,10 @@ class RequestAccessCommand extends ExtendedUserCommand
 
         $user = $storage->getUser($id);
 
-        if ($user !== null) {
+        if (null !== $user) {
             $this->sender->sendMessageWithDefaultKeyboard([
                 'chat_id' => $id,
-                'text' => 'You already have access.'
+                'text' => 'You already have access.',
             ]);
 
             return Request::emptyResponse();
@@ -60,7 +61,7 @@ Use /allow%2$d to accept request.',
 
         $this->sender->sendMessageWithDefaultKeyboard([
             'chat_id' => $id,
-            'text' => 'Access request was successfully sent to administrator.'
+            'text' => 'Access request was successfully sent to administrator.',
         ]);
 
         return Request::emptyResponse();

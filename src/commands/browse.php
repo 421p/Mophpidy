@@ -6,11 +6,10 @@ use Mophpidy\Behaviour\Browser;
 use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
 
-return new class('/browse/i') extends Command
-{
+return new class('/browse/i') extends Command {
     use Browser;
 
-    function execute(Update $update, array $matches, CallbackContainer $callback = null)
+    public function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
         /** @var Player $player */
         $player = $this->getContainer()->get(Player::class);

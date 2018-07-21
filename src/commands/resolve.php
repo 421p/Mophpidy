@@ -11,11 +11,10 @@ use React\Promise as When;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
 
-return new class('/\/resolve (?<id>.+)/i') extends Command
-{
+return new class('/\/resolve (?<id>.+)/i') extends Command {
     use Browser;
 
-    function execute(Update $update, array $matches, CallbackContainer $callback = null)
+    public function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
         switch ($callback->getType()) {
             case CallbackContainer::TRACKS:
@@ -42,11 +41,10 @@ return new class('/\/resolve (?<id>.+)/i') extends Command
         $payload = $callback->getPayload();
 
         $index = $callback->getSelectIndex();
-        $uri = $index !== null ? $payload->get($index)->getUri() : null;
+        $uri = null !== $index ? $payload->get($index)->getUri() : null;
 
         $this->sender->answerCallbackQuery($update->getCallbackQuery()->getId())->then(
             function () use ($update, $player, $uri, $defer, $callback) {
-
                 $chatId = $update->getCallbackQuery()->getMessage()->getChat()->getId();
                 $messageId = $update->getCallbackQuery()->getMessage()->getMessageId();
 

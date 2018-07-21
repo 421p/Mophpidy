@@ -39,11 +39,17 @@ class Telegram extends \Longman\TelegramBot\Telegram
         )->then(
             function (array $data) {
                 foreach ($data['result'] as $raw) {
-
                     try {
                         $update = new Update($raw, $this->getBotUsername());
 
-                        $this->processUpdate($update);
+                        $requestData = json_encode($raw);
+
+                        $request = $this->http->request('POST', 'http://processor', [
+                            'Content-Type' => 'application/json',
+                            'Content-Length' => strlen($requestData),
+                        ]);
+
+                        $request->end($requestData);
 
                         $this->offset = $update->getUpdateId() + 1;
                     } catch (\Throwable $e) {
@@ -71,12 +77,11 @@ class Telegram extends \Longman\TelegramBot\Telegram
                 'Content-Type' => 'application/json',
                 'Content-Length' => strlen($data),
             ]
-        );;
+        );
 
         $request->on(
             'response',
             function (Response $response) use ($defer) {
-
                 $stream = fopen('php://memory', 'rw');
 
                 $response->on(

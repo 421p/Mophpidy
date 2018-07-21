@@ -16,7 +16,7 @@ trait GenericExecutor
 
         $chat_id = $message->getChat()->getId();
 
-        if ($this->isUserAllowed($chat_id)) {
+        if ($this->getStorage()->isUserAllowed($chat_id)) {
             /** @var Command $command */
             foreach ($this->holder as $command) {
                 $matches = [];

@@ -12,6 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * @method ContainerInterface getContainer
+ *
  * @property TelegramCommunicator $sender
  */
 trait Browser
@@ -26,22 +27,19 @@ trait Browser
     ) {
         $library = $player->getLibrary();
 
-        $inProgress = $uri !== null;
+        $inProgress = null !== $uri;
 
         $library->browse($uri)->then(
             function (array $data) use ($update, $inProgress, $chatId, $messageId, $parentCallback) {
-
                 try {
-
-                    $type = $data[0]['type'] === 'directory' ? CallbackContainer::DIRECTORIES : CallbackContainer::TRACKS;
+                    $type = 'directory' === $data[0]['type'] ? CallbackContainer::DIRECTORIES : CallbackContainer::TRACKS;
 
                     /**
-                     * Unique directories: workaround for bug with gmusic directories
+                     * Unique directories: workaround for bug with gmusic directories.
                      */
-
                     $processed = [];
 
-                    for ($names = [], $i = 0, $limit = count($data); $i < $limit; $i++) {
+                    for ($names = [], $i = 0, $limit = count($data); $i < $limit; ++$i) {
                         $item = $data[$i];
                         $name = $item['name'];
 
@@ -57,7 +55,7 @@ trait Browser
                     /** @var Storage $storage */
                     $storage = $this->getContainer()->get(Storage::class);
 
-                    if ($parentCallback !== null && $parentCallback->hasChildren()) {
+                    if (null !== $parentCallback && $parentCallback->hasChildren()) {
                         $callback = $parentCallback;
                         foreach ($callback->getChildren() as $child) {
                             $storage->removeCallback($child);
@@ -69,7 +67,7 @@ trait Browser
                             $storage->getUser($chatId)
                         );
 
-                        if ($parentCallback !== null) {
+                        if (null !== $parentCallback) {
                             $parentCallback->addChild($callback);
                         }
                     }
@@ -94,7 +92,6 @@ trait Browser
                             ]
                         )->then($handler);
                     }
-
                 } catch (\Throwable $e) {
                     Log::error($e);
                 }

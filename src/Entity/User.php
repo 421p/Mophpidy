@@ -12,20 +12,19 @@ use Doctrine\ORM\Mapping as ORM;
 class User
 {
     /**
-     *
      * @ORM\Column(name="id", type="integer")
      * @ORM\Id
      */
     protected $id;
 
     /**
-     * @var boolean
+     * @var bool
      * @ORM\Column(name="should_be_notified", type="boolean")
      */
     protected $notification;
 
     /**
-     * @var boolean
+     * @var bool
      * @ORM\Column(name="is_admin", type="boolean")
      */
     protected $admin;

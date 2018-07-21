@@ -12,6 +12,7 @@ class Storage
 
     /**
      * Storage constructor.
+     *
      * @param EntityManager $connection
      */
     public function __construct(EntityManager $connection)
@@ -21,7 +22,9 @@ class Storage
 
     /**
      * @param int $id
+     *
      * @return User|null
+     *
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\TransactionRequiredException
@@ -33,6 +36,7 @@ class Storage
 
     /**
      * @param int $id
+     *
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
@@ -50,6 +54,7 @@ class Storage
 
     /**
      * @param CallbackContainer $container
+     *
      * @throws \Throwable
      */
     public function addCallback(CallbackContainer $container)
@@ -64,7 +69,9 @@ class Storage
 
     /**
      * @param string $id
+     *
      * @return CallbackContainer|null|object
+     *
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\TransactionRequiredException
@@ -76,7 +83,7 @@ class Storage
 
     /**
      * @param CallbackContainer $container
-     * @return void
+     *
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
@@ -114,7 +121,9 @@ class Storage
 
     /**
      * @param int $id
+     *
      * @return bool
+     *
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\TransactionRequiredException
@@ -123,7 +132,7 @@ class Storage
     {
         $user = $this->em->find(User::class, $id);
 
-        if ($user->shouldBeNotified() === false) {
+        if (false === $user->shouldBeNotified()) {
             return false;
         } else {
             $user->setNotification(false);
@@ -135,7 +144,9 @@ class Storage
 
     /**
      * @param int $id
+     *
      * @return int
+     *
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\TransactionRequiredException
@@ -144,7 +155,7 @@ class Storage
     {
         $user = $this->em->find(User::class, $id);
 
-        if ($user->shouldBeNotified() === true) {
+        if (true === $user->shouldBeNotified()) {
             return false;
         } else {
             $user->setNotification(true);
@@ -156,14 +167,16 @@ class Storage
 
     /**
      * @param int $id
+     *
      * @return bool
+     *
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\TransactionRequiredException
      */
     public function isUserAllowed(int $id): bool
     {
-        return $this->em->find(User::class, $id) !== null;
+        return null !== $this->em->find(User::class, $id);
     }
 
     /**
@@ -178,7 +191,7 @@ class Storage
         foreach ($users as $id) {
             $user = $this->em->find(User::class, $id);
 
-            if ($user === null) {
+            if (null === $user) {
                 $user = new User();
                 $user->setId($id);
                 $user->setNotification(true);

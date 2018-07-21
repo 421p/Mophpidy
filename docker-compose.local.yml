@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  bot:
+    volumes:
+      - .:/app
+  processor-1:
+    volumes:
+      - .:/app
+  processor-2:
+    volumes:
+      - .:/app
+  mysql:
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:

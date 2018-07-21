@@ -40,7 +40,6 @@ class Library
 
                 When\all($promises)->then(
                     function (array $data) use ($defer, $reject, $pattern) {
-
                         $promises = map(
                             filter(
                                 array_merge(...$data),
@@ -86,7 +85,6 @@ class Library
         $this->getAllPlaylists()->then(
             function (array $data) use ($name, $defer) {
                 foreach ($data as $item) {
-
                     if ($item['name'] === $name) {
                         $this->getPlaylist($item['uri'])->then(
                             \Closure::fromCallable([$defer, 'resolve']),

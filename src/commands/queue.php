@@ -6,9 +6,8 @@ use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
 use React\Promise as When;
 
-return new class('/queue/i') extends Command
-{
-    function execute(Update $update, array $matches, CallbackContainer $callback = null)
+return new class('/queue/i') extends Command {
+    public function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
         /** @var Player $player */
         $player = $this->getContainer()->get(Player::class);
@@ -22,7 +21,6 @@ return new class('/queue/i') extends Command
             ]
         )->then(
             function (array $data) use ($chatId) {
-
                 [$queue, $currentTrack] = $data;
 
                 $currentTrackName = $this->makeName($currentTrack);

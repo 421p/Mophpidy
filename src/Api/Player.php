@@ -5,6 +5,7 @@ namespace Mophpidy\Api;
 use Mophpidy\Logging\Log;
 use Mophpidy\Storage\Storage;
 use Mophpidy\Telegram\TelegramCommunicator;
+use Psr\Container\ContainerInterface;
 use React\Promise as When;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
@@ -20,7 +21,6 @@ class Player
     private $mixer;
     private $endpoint;
     private $sender;
-    private $storage;
 
     private $eventsCache = [
         self::TRACK_PLAYBACK_STARTED => null,
@@ -33,8 +33,7 @@ class Player
         Playback $playback,
         Mixer $mixer,
         Endpoint $endpoint,
-        TelegramCommunicator $sender,
-        Storage $storage
+        TelegramCommunicator $sender
     ) {
         $this->library = $library;
         $this->list = $list;
@@ -42,7 +41,6 @@ class Player
         $this->mixer = $mixer;
         $this->endpoint = $endpoint;
         $this->sender = $sender;
-        $this->storage = $storage;
     }
 
     public function getQueue(): PromiseInterface
@@ -50,11 +48,11 @@ class Player
         return $this->list->getTracks();
     }
 
-    public function listenGeneralEvents()
+    public function listenGeneralEvents(ContainerInterface $container)
     {
         $this->listenMopidyEvent(
             self::TRACK_PLAYBACK_STARTED,
-            function (array $data) {
+            function (array $data) use ($container) {
                 $track = $data['tl_track']['track'];
 
                 if ($this->eventsCache[self::TRACK_PLAYBACK_STARTED] !== $track) {
@@ -71,7 +69,7 @@ class Player
                             ) : sprintf('Current track: %s', $track['name'])
                     );
 
-                    foreach ($this->storage->getNotificationSubscribers() as $user) {
+                    foreach ($container->get(Storage::class)->getNotificationSubscribers() as $user) {
                         $this->sender->sendMessageWithDefaultKeyboard(
                             [
                                 'chat_id' => $user->getId(),
@@ -90,8 +88,8 @@ class Player
 
         $this->listenMopidyEvent(
             self::PLAYBACK_STATE_CHANGED,
-            function ($data) {
-                foreach ($this->storage->getNotificationSubscribers() as $user) {
+            function ($data) use ($container) {
+                foreach ($container->get(Storage::class)->getNotificationSubscribers() as $user) {
                     if ($data['old_state'] !== $data['new_state']) {
                         $this->sender->sendMessageWithDefaultKeyboard(
                             [

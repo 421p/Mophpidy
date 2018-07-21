@@ -5,9 +5,8 @@ use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Storage\Storage;
 
-return new class('/\/allow(?<id>\d+)/i') extends Command
-{
-    function execute(Update $update, array $matches, CallbackContainer $callback = null)
+return new class('/\/allow(?<id>\d+)/i') extends Command {
+    public function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
         /** @var Storage $storage */
         $storage = $this->getContainer()->get(Storage::class);
@@ -31,7 +30,7 @@ return new class('/\/allow(?<id>\d+)/i') extends Command
 
         $user = $storage->getUser($id);
 
-        if ($user !== null) {
+        if (null !== $user) {
             $this->sender->sendMessageWithDefaultKeyboard(
                 [
                     'chat_id' => $adminId,

@@ -6,7 +6,7 @@ use Mophpidy\Behaviour\GenericExecutor;
 use Mophpidy\Telegram\ExtendedSystemCommand;
 
 /**
- * Generic command
+ * Generic command.
  */
 class GenericCommand extends ExtendedSystemCommand
 {

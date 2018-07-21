@@ -4,16 +4,16 @@ namespace Longman\TelegramBot\Commands\SystemCommands;
 
 use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
-use Mophpidy\Storage\Storage;
 use Mophpidy\Telegram\ExtendedSystemCommand;
 
 /**
- * Inline query command
+ * Inline query command.
  */
 class CallbackqueryCommand extends ExtendedSystemCommand
 {
     /**
      * @return \Longman\TelegramBot\Entities\ServerResponse
+     *
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\TransactionRequiredException
@@ -25,13 +25,12 @@ class CallbackqueryCommand extends ExtendedSystemCommand
         $chatId = $this->getUpdate()->getCallbackQuery()->getMessage()->getChat()->getId();
         $messageId = $this->getUpdate()->getCallbackQuery()->getMessage()->getMessageId();
 
-        if ($this->isUserAllowed($chatId)) {
+        $storage = $this->getStorage();
 
-            $storage = $this->getContainer()->get(Storage::class);
+        if ($storage->isUserAllowed($chatId)) {
             $callback = $storage->getCallback($id);
 
             if (!$callback) {
-
                 $this->sender->answerCallbackQuery(
                     $this->getUpdate()->getCallbackQuery()->getId(),
                     [
@@ -68,7 +67,6 @@ class CallbackqueryCommand extends ExtendedSystemCommand
                     $command->execute($this->getUpdate(), $matches, $callback);
                 }
             }
-
         } else {
             $this->sender->sendMessageWithDefaultKeyboard(
                 [

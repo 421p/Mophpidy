@@ -5,9 +5,8 @@ use Mophpidy\Api\Player;
 use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
 
-return new class('/(?<operation>single|repeat)/i') extends Command
-{
-    function execute(Update $update, array $matches, CallbackContainer $callback = null)
+return new class('/(?<operation>single|repeat)/i') extends Command {
+    public function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
         $chatId = $update->getMessage()->getChat()->getId();
 
@@ -24,7 +23,6 @@ return new class('/(?<operation>single|repeat)/i') extends Command
 
                 $trackList->$method(!$value)->then(
                     function () use ($option, $value, $chatId) {
-
                         $text = sprintf('%s mode %s.', $option, !$value ? 'enabled' : 'disabled');
 
                         $this->sender->sendMessageWithDefaultKeyboard(
@@ -33,7 +31,6 @@ return new class('/(?<operation>single|repeat)/i') extends Command
                                 'text' => $text,
                             ]
                         );
-
                     }
                 );
             }

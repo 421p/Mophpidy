@@ -16,7 +16,7 @@ class CommandHolder implements \IteratorAggregate
 
     public function getCommands(): array
     {
-        if (count($this->cache) !== 0) {
+        if (0 !== count($this->cache)) {
             return $this->cache;
         }
 

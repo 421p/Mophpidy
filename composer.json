@@ -1,5 +1,5 @@
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "require": {
     "ratchet/pawl": "^0.3.2",
     "lstrojny/functional-php": "^1.8",
@@ -13,10 +13,12 @@
     "react/stream": "^0.7.7",
     "symfony/finder": "^4.1",
     "doctrine/orm": "^2.6",
-    "doctrine/migrations": "^1.8"
+    "doctrine/migrations": "^1.8",
+    "react/http": "^0.8.3"
   },
   "require-dev": {
-    "symfony/var-dumper": "^4.1"
+    "symfony/var-dumper": "^4.1",
+    "friendsofphp/php-cs-fixer": "^2.12"
   },
   "autoload": {
     "psr-4": {

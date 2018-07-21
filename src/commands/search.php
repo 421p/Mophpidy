@@ -7,10 +7,8 @@ use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Storage\Storage;
 
-return new class('/\/search_(?<command>gmusic|soundcloud)\s(?<query>.+)/') extends Command
-{
-
-    function execute(Update $update, array $matches, CallbackContainer $callback = null)
+return new class('/\/search_(?<command>gmusic|soundcloud)\s(?<query>.+)/') extends Command {
+    public function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
         $message = $update->getMessage();
         $query = $matches['query'];
@@ -24,7 +22,7 @@ return new class('/\/search_(?<command>gmusic|soundcloud)\s(?<query>.+)/') exten
 
         $lib->search($query, $uris)->then(
             function ($data) use ($message) {
-                if (count($data[0]['tracks']) === 0) {
+                if (0 === count($data[0]['tracks'])) {
                     $this->sender->sendMessageWithDefaultKeyboard(
                         [
                             'chat_id' => $message->getChat()->getId(),
@@ -57,6 +55,5 @@ return new class('/\/search_(?<command>gmusic|soundcloud)\s(?<query>.+)/') exten
                 }
             }
         );
-
     }
 };

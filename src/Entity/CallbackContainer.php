@@ -203,7 +203,7 @@ class CallbackContainer
     {
         $root = $this;
 
-        while (($parent = $root->getParent()) !== null) {
+        while (null !== ($parent = $root->getParent())) {
             $root = $parent;
         }
 
@@ -217,12 +217,12 @@ class CallbackContainer
 
     public function hasChildren(): bool
     {
-        return $this->children->count() !== 0;
+        return 0 !== $this->children->count();
     }
 
     public function hasParent(): bool
     {
-        return $this->getParent() !== null;
+        return null !== $this->getParent();
     }
 
     public function getParent(): ?CallbackContainer

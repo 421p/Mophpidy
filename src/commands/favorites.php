@@ -6,9 +6,8 @@ use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Storage\Storage;
 
-return new class('/favou?rites/i') extends Command
-{
-    function execute(Update $update, array $matches, CallbackContainer $callback = null)
+return new class('/favou?rites/i') extends Command {
+    public function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
         $storage = $this->getContainer()->get(Storage::class);
 
@@ -17,7 +16,6 @@ return new class('/favou?rites/i') extends Command
 
         $player->getLibrary()->getFavorites()->then(
             function (array $data) use ($storage, $update) {
-
                 $callback = CallbackContainer::pack(
                     $data,
                     CallbackContainer::TRACKS,
