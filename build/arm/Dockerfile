@@ -24,6 +24,7 @@ RUN ln -s /app/doctrine /usr/bin/doctrine && chmod +x /app/doctrine
 
 ADD migrations /app/migrations
 ADD bot.php /app/bot.php
+ADD processor.php /app/processor.php
 ADD autoload.php /app/autoload.php
 ADD cli-config.php /app/cli-config.php
 ADD src /app/src
