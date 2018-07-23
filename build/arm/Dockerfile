@@ -23,6 +23,7 @@ ADD doctrine /app/doctrine
 RUN ln -s /app/doctrine /usr/bin/doctrine && chmod +x /app/doctrine
 
 ADD migrations /app/migrations
+ADD migrations.yml /app/migrations.yml
 ADD bot.php /app/bot.php
 ADD processor.php /app/processor.php
 ADD autoload.php /app/autoload.php
