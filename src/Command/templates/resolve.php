@@ -1,17 +1,16 @@
 <?php
 
-use function Functional\invoke;
 use Longman\TelegramBot\Entities\Update;
 use Mophpidy\Api\Player;
 use Mophpidy\Behaviour\Browser;
 use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
-use Mophpidy\Entity\CallbackPayloadItem;
 use Mophpidy\Logging\Log;
 use Mophpidy\Storage\Storage;
 use React\Promise as When;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
+use function Functional\invoke;
 
 return new class('/\/resolve/i') extends Command {
     use Browser;

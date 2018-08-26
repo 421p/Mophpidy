@@ -18,51 +18,41 @@ parameters:
     Try to /requestaccess
 
 services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  Mophpidy\:
+    resource: '../src/*'
+    exclude: '../src/Command/templates'
+
   React\EventLoop\LoopInterface:
     public: true
     factory: ['React\EventLoop\Factory', create]
 
   Mophpidy\Api\Endpoint:
-    arguments: ['%env(MOPIDY_URI)%', '@React\EventLoop\LoopInterface']
+    arguments: ['%env(MOPIDY_URI)%']
     calls:
       - ['connect']
-  Mophpidy\Api\TrackList:
-    arguments: ['@Mophpidy\Api\Endpoint']
-  Mophpidy\Api\Library:
-    arguments: ['@Mophpidy\Api\Endpoint']
-  Mophpidy\Api\Playback:
-    arguments: ['@Mophpidy\Api\Endpoint']
-  Mophpidy\Api\Mixer:
-    arguments: ['@Mophpidy\Api\Endpoint']
 
   Mophpidy\Api\Player:
     public: true
-    arguments:
-      - '@Mophpidy\Api\Library'
-      - '@Mophpidy\Api\TrackList'
-      - '@Mophpidy\Api\Playback'
-      - '@Mophpidy\Api\Mixer'
-      - '@Mophpidy\Api\Endpoint'
-      - '@Mophpidy\Telegram\TelegramCommunicator'
-      - '@Mophpidy\Storage\Storage'
     calls:
       - ['listenGeneralEvents']
 
   Longman\TelegramBot\Telegram:
     public: true
     class: 'Mophpidy\Telegram\Telegram'
-    arguments: ['%env(TELEGRAM_TOKEN)%', '%env(BOT_USERNAME)%', '@React\EventLoop\LoopInterface']
+    arguments: ['%env(TELEGRAM_TOKEN)%', '%env(BOT_USERNAME)%']
     calls:
       - ['useGetUpdatesWithoutDatabase']
 
   Mophpidy\Telegram\TelegramCommunicator:
     public: true
     arguments:
-      - '%env(TELEGRAM_TOKEN)%'
-      - '@React\EventLoop\LoopInterface'
-      - '%keyboard.default%'
-      - '@Mophpidy\Api\TrackList'
-      - '@Mophpidy\Api\Playback'
+      $apiKey: '%env(TELEGRAM_TOKEN)%'
+      $defaultKeyboard: '%keyboard.default%'
 
   Mophpidy\Command\CommandHolder:
     calls:
@@ -79,5 +69,3 @@ services:
     shared: false
     factory: ['@Mophpidy\Storage\Redis\RedisFactory', create]
     arguments: ['%redis.connection_string%']
-  Mophpidy\Storage\Redis\RedisFactory:
-    arguments: ['@React\EventLoop\LoopInterface']

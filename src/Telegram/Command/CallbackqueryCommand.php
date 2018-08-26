@@ -1,10 +1,9 @@
 <?php
 
-namespace Longman\TelegramBot\Commands\SystemCommands;
+namespace Mophpidy\Telegram\Command;
 
 use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
-use Mophpidy\Telegram\Command\ExtendedSystemCommand;
 
 /**
  * Inline query command.
@@ -65,7 +64,7 @@ class CallbackqueryCommand extends ExtendedSystemCommand
                     $this->sender->sendMessageWithDefaultKeyboard(
                         [
                             'chat_id' => $chatId,
-                            'text'    => $this->getContainer()->getParameter('not.allowed'),
+                            'text'    => $this->container->getParameter('not.allowed'),
                         ]
                     );
                 }

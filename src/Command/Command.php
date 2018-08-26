@@ -3,21 +3,21 @@
 namespace Mophpidy\Command;
 
 use Longman\TelegramBot\Entities\Update;
-use Mophpidy\Behaviour\ContainerAccess;
 use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Telegram\TelegramCommunicator;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
-abstract class Command
+abstract class Command implements ContainerAwareInterface
 {
-    use ContainerAccess;
-
+    /** @var TelegramCommunicator */
     protected $sender;
+    protected $container;
     private $regex;
 
     public function __construct(string $regex)
     {
         $this->regex = $regex;
-        $this->sender = $this->getContainer()->get(TelegramCommunicator::class);
     }
 
     public function match(string $text, array &$matches): bool
@@ -30,5 +30,23 @@ abstract class Command
     public function getRegex(): string
     {
         return $this->regex;
+    }
+
+    protected function getContainer(): ContainerInterface
+    {
+        return $this->container;
+    }
+
+    public function setContainer(ContainerInterface $container = null)
+    {
+        $this->container = $container;
+    }
+
+    /**
+     * @param TelegramCommunicator $sender
+     */
+    public function setSender(TelegramCommunicator $sender): void
+    {
+        $this->sender = $sender;
     }
 }

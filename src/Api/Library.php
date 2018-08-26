@@ -137,7 +137,7 @@ class Library
                 ],
             ]
         )->then(
-            function (array $data) use ($defer, $rejecter, $name) {
+            function (array $data) use ($defer, $name) {
                 $track = first(
                     $data[0]['tracks'],
                     function (array $element) use ($name) {

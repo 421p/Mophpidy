@@ -2,6 +2,7 @@
 
 namespace Mophpidy\Telegram;
 
+use function Functional\curry;
 use Mophpidy\Api\Playback;
 use Mophpidy\Api\TrackList;
 use React\EventLoop\LoopInterface;
@@ -162,13 +163,9 @@ class TelegramCommunicator
             'response',
             function (Response $response) use ($defer, $data) {
                 $stream = fopen('php://memory', 'rw');
+                $writer = curry('fwrite')($stream);
 
-                $response->on(
-                    'data',
-                    function ($chunk) use ($stream) {
-                        fwrite($stream, $chunk);
-                    }
-                );
+                $response->on('data', $writer);
 
                 $response->on(
                     'end',

@@ -18,9 +18,6 @@ ARGS = $(filter-out $@,$(MAKECMDGOALS))
 console:
 	$(EXEC) bash
 
-db:
-	$(EXEC) ./doctrine $(ARGS)
-
 cs:
 	$(PHPCSFIXER) fix . --rules=@Symfony
 

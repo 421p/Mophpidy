@@ -12,7 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * @property TelegramCommunicator $sender
  * @method Storage getStorage()
- * @method ContainerInterface getContainer()
+ * @property  ContainerInterface $container
  */
 trait GenericExecutor
 {
@@ -37,7 +37,7 @@ trait GenericExecutor
                 $this->sender->sendMessageWithDefaultKeyboard(
                     [
                         'chat_id' => $chat_id,
-                        'text' => $this->getContainer()->getParameter('not.allowed'),
+                        'text' => $this->container->getParameter('not.allowed'),
                     ]
                 );
             }

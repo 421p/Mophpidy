@@ -1,10 +1,9 @@
 <?php
 
-namespace Longman\TelegramBot\Commands\UserCommands;
+namespace Mophpidy\Telegram\Command;
 
 use Mophpidy\Entity\User;
 use Mophpidy\Storage\Storage;
-use Mophpidy\Telegram\Command\ExtendedUserCommand;
 
 class RequestAccessCommand extends ExtendedUserCommand
 {
@@ -13,7 +12,7 @@ class RequestAccessCommand extends ExtendedUserCommand
     protected function doExecute(): void
     {
         /** @var Storage $player */
-        $storage = $this->getContainer()->get(Storage::class);
+        $storage = $this->container->get(Storage::class);
 
         $chat = $this->getMessage()->getChat();
 

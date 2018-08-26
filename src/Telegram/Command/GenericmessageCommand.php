@@ -1,9 +1,8 @@
 <?php
 
-namespace Longman\TelegramBot\Commands\SystemCommands;
+namespace Mophpidy\Telegram\Command;
 
 use Mophpidy\Telegram\Command\Behaviour\GenericExecutor;
-use Mophpidy\Telegram\Command\ExtendedSystemCommand;
 
 class GenericmessageCommand extends ExtendedSystemCommand
 {

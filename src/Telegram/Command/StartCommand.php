@@ -1,8 +1,6 @@
 <?php
 
-namespace Longman\TelegramBot\Commands\SystemCommands;
-
-use Mophpidy\Telegram\Command\ExtendedSystemCommand;
+namespace Mophpidy\Telegram\Command;
 
 class StartCommand extends ExtendedSystemCommand
 {

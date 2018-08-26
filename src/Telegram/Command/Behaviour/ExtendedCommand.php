@@ -4,31 +4,38 @@
 namespace Mophpidy\Telegram\Command\Behaviour;
 
 
-use Longman\TelegramBot\Entities\Update;
-use Longman\TelegramBot\Telegram;
-use Mophpidy\Behaviour\ContainerAccess;
 use Mophpidy\Command\CommandHolder;
 use Mophpidy\Storage\Storage;
 use Mophpidy\Telegram\TelegramCommunicator;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 trait ExtendedCommand
 {
-    use ContainerAccess;
-
+    /** @var TelegramCommunicator */
     protected $sender;
+
+    /** @var CommandHolder */
     protected $holder;
 
-    public function __construct(Telegram $telegram, Update $update = null)
-    {
-        $this->sender = $this->getContainer()->get(TelegramCommunicator::class);
-        $this->holder = $this->getContainer()->get(CommandHolder::class);
+    /** @var ContainerInterface */
+    protected $container;
 
-        parent::__construct($telegram, $update);
+    protected function getParameter(string $name)
+    {
+        return $this->container->getParameter($name);
+    }
+
+    public function setContainer(ContainerInterface $container = null)
+    {
+        $this->container = $container;
+
+        $this->sender = $this->container->get(TelegramCommunicator::class);
+        $this->holder = $this->container->get(CommandHolder::class);
     }
 
     protected function getStorage(): Storage
     {
-        return $this->getContainer()->get(Storage::class);
+        return $this->container->get(Storage::class);
     }
 
     public function execute()

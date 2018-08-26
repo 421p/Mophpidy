@@ -3,11 +3,27 @@
 namespace Mophpidy\Command;
 
 use Mophpidy\Logging\Log;
+use Mophpidy\Telegram\TelegramCommunicator;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Finder\Finder;
 
 class CommandHolder implements \IteratorAggregate
 {
     private $cache = [];
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+    /**
+     * @var TelegramCommunicator
+     */
+    private $sender;
+
+    public function __construct(ContainerInterface $container, TelegramCommunicator $sender)
+    {
+        $this->container = $container;
+        $this->sender = $sender;
+    }
 
     public function cacheCommands()
     {
@@ -22,12 +38,18 @@ class CommandHolder implements \IteratorAggregate
 
         $finder = new Finder();
 
-        $finder->files()->in(__DIR__.'/../commands');
+        $finder->files()->in(__DIR__.'/templates');
 
         $commands = [];
 
         foreach ($finder as $file) {
-            $commands[] = require $file->getRealPath();
+            /** @var Command $command */
+            $command = require $file->getRealPath();
+
+            $command->setContainer($this->container);
+            $command->setSender($this->sender);
+
+            $commands[] = $command;
         }
 
         Log::info('{amount} commands loaded.', ['amount' => count($commands)]);
@@ -40,6 +62,8 @@ class CommandHolder implements \IteratorAggregate
      */
     public function getIterator()
     {
-        return new \ArrayIterator($this->getCommands());
+        foreach ($this->getCommands() as $command) {
+            yield $command;
+        }
     }
 }
