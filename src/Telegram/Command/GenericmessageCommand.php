@@ -2,8 +2,8 @@
 
 namespace Longman\TelegramBot\Commands\SystemCommands;
 
-use Mophpidy\Behaviour\GenericExecutor;
-use Mophpidy\Telegram\ExtendedSystemCommand;
+use Mophpidy\Telegram\Command\Behaviour\GenericExecutor;
+use Mophpidy\Telegram\Command\ExtendedSystemCommand;
 
 class GenericmessageCommand extends ExtendedSystemCommand
 {
@@ -11,9 +11,4 @@ class GenericmessageCommand extends ExtendedSystemCommand
 
     protected $name = 'generic';
     protected $description = 'Handles generic commands or is executed by default when a command is not found';
-
-    public function execute()
-    {
-        return $this->executeGeneric();
-    }
 }

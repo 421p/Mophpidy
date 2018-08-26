@@ -5,7 +5,8 @@ use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Storage\Storage;
 
-return new class('/\/(?<operation>enable|disable)_notifications/i') extends Command {
+return new class('/\/(?<operation>enable|disable)_notifications/i') extends Command
+{
     public function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
         $chatId = $update->getMessage()->getChat()->getId();
@@ -14,15 +15,19 @@ return new class('/\/(?<operation>enable|disable)_notifications/i') extends Comm
 
         $operation = strtolower($matches['operation']);
 
-        $method = $operation.'Notifications';
+        $method = $operation . 'Notifications';
 
-        if ($storage->$method($chatId)) {
-            $this->sender->sendMessageWithDefaultKeyboard(
-                [
-                    'chat_id' => $chatId,
-                    'text' => sprintf('Notifications %sd.', $operation),
-                ]
-            );
-        }
+        $storage->$method($chatId)->then(
+            function (bool $result) use ($chatId, $operation) {
+                if ($result) {
+                    $this->sender->sendMessageWithDefaultKeyboard(
+                        [
+                            'chat_id' => $chatId,
+                            'text'    => sprintf('Notifications %sd.', $operation),
+                        ]
+                    );
+                }
+            }
+        );
     }
 };

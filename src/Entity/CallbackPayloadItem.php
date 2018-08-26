@@ -2,32 +2,19 @@
 
 namespace Mophpidy\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
-/**
- * @ORM\Table(name="callback_payload")
- * @ORM\Entity
- */
-class CallbackPayloadItem
+class CallbackPayloadItem implements \Serializable, \JsonSerializable
 {
-    /**
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     * @ORM\Id
-     */
-    protected $id;
-
-    /**
-     * @var CallbackContainer
-     * @ORM\ManyToOne(targetEntity="Mophpidy\Entity\CallbackContainer", inversedBy="payload")
-     * @ORM\JoinColumn(name="callback_id", referencedColumnName="id", onDelete="CASCADE")
-     */
-    protected $callback;
-
-    /** @ORM\Column(name="uri", type="string") */
     protected $uri;
-    /** @ORM\Column(name="name", type="string") */
     protected $name;
+
+    public static function fromArray(array $data): CallbackPayloadItem
+    {
+        $item = new CallbackPayloadItem();
+        $item->setName($data['name']);
+        $item->setUri($data['uri']);
+
+        return $item;
+    }
 
     public function getUri()
     {
@@ -49,13 +36,51 @@ class CallbackPayloadItem
         $this->name = $name;
     }
 
-    public function getCallback(): CallbackContainer
+    /**
+     * String representation of object
+     *
+     * @link  http://php.net/manual/en/serializable.serialize.php
+     * @return string the string representation of the object or null
+     * @since 5.1.0
+     */
+    public function serialize()
     {
-        return $this->callback;
+        return json_encode($this);
     }
 
-    public function setCallback(CallbackContainer $callback): void
+    /**
+     * Constructs the object
+     *
+     * @link  http://php.net/manual/en/serializable.unserialize.php
+     *
+     * @param string $serialized <p>
+     *                           The string representation of the object.
+     *                           </p>
+     *
+     * @return void
+     * @since 5.1.0
+     */
+    public function unserialize($serialized)
     {
-        $this->callback = $callback;
+        $data = json_decode($serialized, true);
+
+        $this->name = $data['name'];
+        $this->uri = $data['uri'];
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     *
+     * @link  http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'name' => $this->name,
+            'uri'  => $this->uri,
+        ];
     }
 }

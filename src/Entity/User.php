@@ -2,42 +2,11 @@
 
 namespace Mophpidy\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
-
-/**
- * @ORM\Table(name="user", indexes={@ORM\Index(name="search_idx", columns={"should_be_notified"})})
- * @ORM\Entity
- */
-class User
+class User implements \JsonSerializable, \Serializable
 {
-    /**
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     */
     protected $id;
-
-    /**
-     * @var bool
-     * @ORM\Column(name="should_be_notified", type="boolean")
-     */
     protected $notification;
-
-    /**
-     * @var bool
-     * @ORM\Column(name="is_admin", type="boolean")
-     */
     protected $admin;
-
-    /**
-     * @ORM\OneToMany(targetEntity="CallbackContainer", mappedBy="user")
-     */
-    protected $callbacks;
-
-    public function __construct()
-    {
-        $this->callbacks = new ArrayCollection();
-    }
 
     public function getId()
     {
@@ -67,5 +36,55 @@ class User
     public function setAdmin(bool $admin): void
     {
         $this->admin = $admin;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     *
+     * @link  http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'id'           => $this->id,
+            'notification' => $this->notification,
+            'admin'        => $this->admin,
+        ];
+    }
+
+    /**
+     * String representation of object
+     *
+     * @link  http://php.net/manual/en/serializable.serialize.php
+     * @return string the string representation of the object or null
+     * @since 5.1.0
+     */
+    public function serialize()
+    {
+        return json_encode($this);
+    }
+
+    /**
+     * Constructs the object
+     *
+     * @link  http://php.net/manual/en/serializable.unserialize.php
+     *
+     * @param string $serialized <p>
+     *                           The string representation of the object.
+     *                           </p>
+     *
+     * @return void
+     * @since 5.1.0
+     */
+    public function unserialize($serialized)
+    {
+        $data = json_decode($serialized, true);
+
+        $this->id           = $data['id'];
+        $this->notification = $data['notification'];
+        $this->admin        = $data['admin'];
     }
 }

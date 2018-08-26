@@ -14,18 +14,12 @@ before_install:
 - docker pull arm32v7/php:7-cli
 - docker pull php:7-cli
 - docker pull resin/rpi-raspbian:stretch
-- docker pull nginx:stable-alpine
-- docker pull arm32v7/nginx
-- composer install
+- composer install --no-ansi --no-dev --no-interaction --no-progress --no-scripts --optimize-autoloader
 script:
 - docker build . -t 421p/mophpidy:latest -f build/amd/Dockerfile
 - docker build . -t 421p/mophpidy:${APP_VERSION} -f build/amd/Dockerfile
 - docker build . -t 421p/mophpidy:arm32v7 -f build/arm/Dockerfile
 - docker build . -t 421p/mophpidy:${APP_VERSION}-arm32v7 -f build/arm/Dockerfile
-- docker build . -t 421p/mophpidy-nginx:latest -f build/nginx/amd/Dockerfile
-- docker build . -t 421p/mophpidy-nginx:${APP_VERSION} -f build/nginx/amd/Dockerfile
-- docker build . -t 421p/mophpidy-nginx:arm32v7 -f build/nginx/arm/Dockerfile
-- docker build . -t 421p/mophpidy-nginx:${APP_VERSION}-arm32v7 -f build/nginx/arm/Dockerfile
 notifications:
   webhooks: https://fathomless-fjord-24024.herokuapp.com/notify
 deploy:

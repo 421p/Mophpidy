@@ -2,45 +2,223 @@
 
 namespace Mophpidy\Storage;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Inflector\Inflector;
 use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Entity\User;
+use Mophpidy\Storage\Redis\RedisClient as Redis;
+use React\Promise\Deferred;
+use React\Promise\PromiseInterface;
+use function Functional\compose;
+use function Functional\const_function;
+use function Functional\equal;
+use function Functional\match;
 
+/**
+ * @method PromiseInterface userStorage(callable $closure)
+ * @method PromiseInterface callbackStorage(callable $closure)
+ * @method PromiseInterface getUser(int $id)
+ * @method PromiseInterface getCallback(string $id)
+ * @method PromiseInterface hasUser(int $id)
+ * @method PromiseInterface hasCallback(string $id)
+ * @method void forEachUser(callable $closure)
+ */
 class Storage
 {
-    private $em;
+    const DB_CALLBACK = 0;
+    const DB_USER     = 1;
+
+    private $connections;
+    private $reflector;
 
     /**
      * Storage constructor.
      *
-     * @param EntityManager $connection
+     * @param PromiseInterface<RedisClient, \Throwable> $userSpaceRedis
+     * @param PromiseInterface<RedisClient, \Throwable> $callbackSpaceRedis
      */
-    public function __construct(EntityManager $connection)
+    public function __construct(
+        PromiseInterface $userSpaceRedis,
+        PromiseInterface $callbackSpaceRedis
+    ) {
+
+        $this->reflector   = new \ReflectionObject($this);
+
+        $callbackDefer = new Deferred();
+        $userDefer     = new Deferred();
+
+        $this->connections = [
+            self::DB_CALLBACK => $callbackDefer->promise(),
+            self::DB_USER => $userDefer->promise()
+        ];
+
+        $userSpaceRedis->then(
+            function (Redis $client) use ($userDefer) {
+                $client->select(self::DB_USER)->then(
+                    function () use ($client, $userDefer) {
+                        $userDefer->resolve($client);
+                    }
+                );
+            }
+        );
+
+        $callbackSpaceRedis->then(
+            function (Redis $client) use ($callbackDefer) {
+                $client->select(self::DB_CALLBACK)->then(
+                    function () use ($client, $callbackDefer) {
+                        $callbackDefer->resolve($client);
+                    }
+                );
+            }
+        );
+    }
+
+    private function getConstant(string $name)
     {
-        $this->em = $connection;
+        return $this->reflector->getConstant(sprintf('DB_%s', strtoupper($name)));
+    }
+
+    public function __call($name, $arguments)
+    {
+        $methods = get_class_methods(self::class);
+
+        if (in_array($name, $methods)) {
+            return null;
+        }
+
+        $tokens = explode('_', Inflector::tableize($name));
+
+        $method = array_pop($tokens);
+        $type   = Inflector::camelize(implode('_', $tokens));
+
+        if (in_array($type, ['get', 'forEach', 'has'])) {
+            [$method, $type] = [$type, $method];
+        }
+
+        if (in_array($method, get_class_methods(self::class))) {
+
+            $arguments[] = $this->getConstant($type);
+
+            return $this->$method(...$arguments);
+        } else {
+            throw new \BadMethodCallException('Method ' . $name . ' not found.');
+        }
+    }
+
+    public function storage(callable $closure, int $type): PromiseInterface
+    {
+        $defer = new Deferred();
+
+        $this->connections[$type]->then(
+            function (Redis $client) use ($closure, $defer, $type) {
+                $client->select($type)->then(
+                    function () use ($closure, $client, $defer) {
+                        $defer->resolve($closure($client));
+                    }
+                );
+            }
+        );
+
+        return $defer->promise();
+    }
+
+    public function forEach(callable $closure, int $type)
+    {
+        $this->storage(
+            function (Redis $client) use ($closure, $type) {
+
+                $scanner = function (int $index = null) use ($client, &$scanner, $closure, $type) {
+
+                    if ($index === 0) {
+                        return;
+                    }
+
+                    $client->scan($index ?? 0)->then(
+                        function (array $data) use (&$scanner, $closure, $type) {
+                            $cursor = $data[0];
+
+                            foreach ($data[1] as $key) {
+                                $this->get($key, $type)->then($closure);
+                            }
+
+                            $scanner($cursor);
+                        }
+                    );
+                };
+
+                $scanner();
+            },
+            $type
+        );
+    }
+
+    public function has($id, int $type): PromiseInterface
+    {
+        $defer = new Deferred();
+
+        $this->storage(
+            function (Redis $redis) use ($id) {
+                return $redis->exists($id);
+            },
+            $type
+        )->then(
+            function ($data) use ($defer) {
+                $defer->resolve($data === 0 ? false : true);
+            },
+            \Closure::fromCallable([$defer, 'reject'])
+        );
+
+        return $defer->promise();
+    }
+
+    public function get($id, int $type): PromiseInterface
+    {
+        $defer = new Deferred();
+
+        $this->storage(
+            function (Redis $redis) use ($id) {
+                return $redis->get($id);
+            },
+            $type
+        )->then(
+            function ($data) use ($defer, $type) {
+
+                if ($data === null) {
+                    $defer->resolve(null);
+
+                    return;
+                }
+
+                try {
+                    $class = match(
+                        [
+                            [equal(self::DB_CALLBACK), const_function(CallbackContainer::class)],
+                            [equal(self::DB_USER), const_function(User::class)],
+                        ]
+                    )(
+                        $type
+                    );
+
+                    /** @var \Serializable $item */
+                    $item = new $class();
+
+                    $item->unserialize($data);
+
+                    $defer->resolve($item);
+                } catch (\Throwable $e) {
+                    $defer->reject($e);
+                }
+            }
+        );
+
+        return $defer->promise();
     }
 
     /**
      * @param int $id
      *
-     * @return User|null
-     *
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\TransactionRequiredException
+     * @return PromiseInterface
      */
-    public function getUser(int $id): ?User
-    {
-        return $this->em->find(User::class, $id);
-    }
-
-    /**
-     * @param int $id
-     *
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
-    public function addDefaultUser(int $id)
+    public function addDefaultUser(int $id): PromiseInterface
     {
         $user = new User();
 
@@ -48,167 +226,163 @@ class Storage
         $user->setNotification(false);
         $user->setAdmin(false);
 
-        $this->em->persist($user);
-        $this->em->flush();
+        return $this->addOrUpdateUser($user);
     }
 
-    /**
-     * @param CallbackContainer $container
-     *
-     * @throws \Throwable
-     */
-    public function addCallback(CallbackContainer $container)
+    public function addOrUpdateUser(User $user): PromiseInterface
     {
-        $this->em->transactional(
-            function () use ($container) {
-                $this->em->persist($container);
-                $this->em->flush();
+        return $this->userStorage(
+            function (Redis $redis) use ($user) {
+                return $redis->set($user->getId(), $user->serialize());
             }
         );
     }
 
     /**
-     * @param string $id
+     * @param CallbackContainer $container
      *
-     * @return CallbackContainer|null|object
-     *
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\TransactionRequiredException
+     * @return PromiseInterface
+     * @throws \Throwable
      */
-    public function getCallback(string $id): ?CallbackContainer
+    public function addOrUpdateCallback(CallbackContainer $container): PromiseInterface
     {
-        return $this->em->find(CallbackContainer::class, $id);
+        return $this->callbackStorage(
+            function (Redis $redis) use ($container) {
+                return $redis->set($container->getId(), $container->serialize());
+            }
+        );
     }
 
     /**
      * @param CallbackContainer $container
      *
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @return PromiseInterface
      */
-    public function removeCallback(CallbackContainer $container): void
+    public function removeCallback(CallbackContainer $container): PromiseInterface
     {
-        $this->em->remove($container);
-        $this->em->flush();
+        return $this->callbackStorage(
+            function (Redis $redis) use ($container) {
+                return $redis->del($container->getId());
+            }
+        );
     }
 
-    /**
-     * @return User[]
-     */
-    public function getNotificationSubscribers(): array
+    public function forEachNotificationSubscriber(callable $closure): void
     {
-        return $this->em->createQueryBuilder()
-            ->select('u')
-            ->from(User::class, 'u')
-            ->where('u.notification = true')
-            ->getQuery()
-            ->getResult();
+        $this->forEachUser(
+            function (User $user) use ($closure) {
+                if ($user->shouldBeNotified()) {
+                    $closure($user);
+                }
+            }
+        );
     }
 
-    /**
-     * @return User[]
-     */
-    public function getAdmins(): array
+    public function forEachAdmin(callable $closure): void
     {
-        return $this->em->createQueryBuilder()
-            ->select('u')
-            ->from(User::class, 'u')
-            ->where('u.admin = true')
-            ->getQuery()
-            ->getResult();
-    }
-
-    /**
-     * @param int $id
-     *
-     * @return bool
-     *
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\TransactionRequiredException
-     */
-    public function disableNotifications(int $id): bool
-    {
-        $user = $this->em->find(User::class, $id);
-
-        if (false === $user->shouldBeNotified()) {
-            return false;
-        } else {
-            $user->setNotification(false);
-            $this->em->flush();
-
-            return true;
-        }
+        $this->forEachUser(
+            function (User $user) use ($closure) {
+                if ($user->isAdmin()) {
+                    $closure($user);
+                }
+            }
+        );
     }
 
     /**
      * @param int $id
      *
-     * @return int
-     *
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\TransactionRequiredException
+     * @return PromiseInterface
      */
-    public function enableNotifications(int $id): int
+    public function disableNotifications(int $id): PromiseInterface
     {
-        $user = $this->em->find(User::class, $id);
+        $defer = new Deferred();
 
-        if (true === $user->shouldBeNotified()) {
-            return false;
-        } else {
-            $user->setNotification(true);
-            $this->em->flush();
+        $this->getUser($id)->then(
+            function (User $user) use ($defer) {
+                if (false === $user->shouldBeNotified()) {
+                    $defer->resolve(false);
+                } else {
+                    $user->setNotification(false);
 
-            return true;
-        }
+                    $this->addOrUpdateUser($user)->then(
+                        function () use ($defer) {
+                            $defer->resolve(true);
+                        }
+                    );
+                }
+            }
+        );
+
+        return $defer->promise();
     }
 
     /**
      * @param int $id
      *
-     * @return bool
-     *
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\TransactionRequiredException
+     * @return PromiseInterface
      */
-    public function isUserAllowed(int $id): bool
+    public function enableNotifications(int $id): PromiseInterface
     {
-        return null !== $this->em->find(User::class, $id);
+        $defer = new Deferred();
+
+        $this->getUser($id)->then(
+            function (User $user) use ($defer) {
+                if (true === $user->shouldBeNotified()) {
+                    $defer->resolve(false);
+                } else {
+                    $user->setNotification(true);
+
+                    $this->addOrUpdateUser($user)->then(
+                        function () use ($defer) {
+                            $defer->resolve(true);
+                        }
+                    );
+                }
+            }
+        );
+
+        return $defer->promise();
     }
 
     /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\TransactionRequiredException
+     * @param int $id
+     *
+     * @return PromiseInterface
      */
-    public function updateAdmins()
+    public function isUserAllowed(int $id): PromiseInterface
     {
-        $users = array_map('trim', explode(',', getenv('ADMIN')));
+        return $this->hasUser($id);
+    }
+
+    public function updateAdmins(): PromiseInterface
+    {
+        $defer = new Deferred();
+
+        $users = array_map(
+            compose('trim', 'intval'),
+            explode(',', getenv('ADMIN'))
+        );
 
         foreach ($users as $id) {
-            $user = $this->em->find(User::class, $id);
 
-            if (null === $user) {
-                $user = new User();
-                $user->setId($id);
-                $user->setNotification(true);
-                $user->setAdmin(true);
+            $this->hasUser($id)->then(
+                function (bool $exists) use ($id, $defer) {
+                    if (!$exists) {
+                        $user = new User();
+                        $user->setId($id);
+                        $user->setNotification(true);
+                        $user->setAdmin(true);
 
-                $this->em->persist($user);
-            }
+                        $this->addOrUpdateUser($user)->then(
+                            'dump',
+                            'dump'
+                        );
+                    }
+                }
+            );
         }
 
-        $this->em->flush();
-    }
-
-    /**
-     * @return EntityManager
-     */
-    public function getEm(): EntityManager
-    {
-        return $this->em;
+        return $defer->promise();
     }
 }

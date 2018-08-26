@@ -25,6 +25,7 @@ trait Browser
         $uri = null,
         CallbackContainer $parentCallback = null
     ) {
+
         $library = $player->getLibrary();
 
         $inProgress = null !== $uri;
@@ -55,26 +56,15 @@ trait Browser
                     /** @var Storage $storage */
                     $storage = $this->getContainer()->get(Storage::class);
 
-                    if (null !== $parentCallback && $parentCallback->hasChildren()) {
-                        $callback = $parentCallback;
-                        foreach ($callback->getChildren() as $child) {
-                            $storage->removeCallback($child);
-                        }
-                    } else {
-                        $callback = CallbackContainer::pack(
-                            $processed,
-                            $type,
-                            $storage->getUser($chatId)
-                        );
-
-                        if (null !== $parentCallback) {
-                            $parentCallback->addChild($callback);
-                        }
-                    }
+                    $callback = CallbackContainer::pack(
+                        $processed,
+                        $type,
+                        $chatId
+                    );
 
                     $handler = function (array $data) use ($storage, $callback) {
                         $callback->setMessageId($data['message_id']);
-                        $storage->addCallback($callback);
+                        $storage->addOrUpdateCallback($callback);
                     };
 
                     $markup = [

@@ -2,7 +2,7 @@
 
 namespace Longman\TelegramBot\Commands\SystemCommands;
 
-use Mophpidy\Telegram\ExtendedSystemCommand;
+use Mophpidy\Telegram\Command\ExtendedSystemCommand;
 
 class StartCommand extends ExtendedSystemCommand
 {
@@ -23,7 +23,7 @@ Some useful commands:
     /requestaccess - send a request to be allowed to use bot
     ';
 
-    public function execute()
+    protected function doExecute(): void
     {
         $message = $this->getMessage();
 
@@ -36,7 +36,5 @@ Some useful commands:
         ];
 
         $this->sender->sendMessageWithDefaultKeyboard($data)->then(null, 'dump');
-
-        return parent::execute();
     }
 }

@@ -19,7 +19,7 @@ class Telegram extends \Longman\TelegramBot\Telegram
     private $limit = 100;
     private $timeout = 120;
 
-    public function __construct(string $api_key, string $bot_username = '', LoopInterface $loop)
+    public function __construct(string $api_key, string $bot_username, LoopInterface $loop)
     {
         $this->loop = $loop;
         parent::__construct($api_key, $bot_username);
@@ -42,14 +42,7 @@ class Telegram extends \Longman\TelegramBot\Telegram
                     try {
                         $update = new Update($raw, $this->getBotUsername());
 
-                        $requestData = json_encode($raw);
-
-                        $request = $this->http->request('POST', 'http://processor', [
-                            'Content-Type' => 'application/json',
-                            'Content-Length' => strlen($requestData),
-                        ]);
-
-                        $request->end($requestData);
+                        $this->processUpdate($update);
 
                         $this->offset = $update->getUpdateId() + 1;
                     } catch (\Throwable $e) {

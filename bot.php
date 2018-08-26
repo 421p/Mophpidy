@@ -6,7 +6,7 @@ use Mophpidy\DI\Injector;
 use Mophpidy\Logging\Log;
 use React\EventLoop\LoopInterface;
 
-require_once __DIR__.'/autoload.php';
+require_once __DIR__ . '/autoload.php';
 
 try {
     $container = Injector::getContainer();

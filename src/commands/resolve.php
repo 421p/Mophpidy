@@ -1,33 +1,42 @@
 <?php
 
+use function Functional\invoke;
 use Longman\TelegramBot\Entities\Update;
 use Mophpidy\Api\Player;
 use Mophpidy\Behaviour\Browser;
 use Mophpidy\Command\Command;
 use Mophpidy\Entity\CallbackContainer;
 use Mophpidy\Entity\CallbackPayloadItem;
+use Mophpidy\Logging\Log;
 use Mophpidy\Storage\Storage;
 use React\Promise as When;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
 
-return new class('/\/resolve (?<id>.+)/i') extends Command {
+return new class('/\/resolve/i') extends Command {
     use Browser;
 
     public function execute(Update $update, array $matches, CallbackContainer $callback = null)
     {
-        switch ($callback->getType()) {
-            case CallbackContainer::TRACKS:
-                $this->handlePlaying($callback, $update)->then(function () use ($callback) {
-                    $storage = $this->getContainer()->get(Storage::class);
-                    $storage->removeCallback($callback->getRoot());
-                });
-                break;
-            case CallbackContainer::DIRECTORIES:
-                $this->handleBrowsing($callback, $update);
-                break;
-            default:
-                throw new \RuntimeException('Unknown type of callback.');
+        try {
+            switch ($callback->getType()) {
+                case CallbackContainer::TRACKS:
+                    $this->handlePlaying($callback, $update)->then(function () use ($callback) {
+                        $storage = $this->getContainer()->get(Storage::class);
+                        $storage->removeCallback($callback);
+                    });
+                    break;
+                case CallbackContainer::DIRECTORIES:
+                    $this->handleBrowsing($callback, $update)->then(function () use ($callback) {
+                        $storage = $this->getContainer()->get(Storage::class);
+                        $storage->removeCallback($callback);
+                    });
+                    break;
+                default:
+                    throw new \RuntimeException('Unknown type of callback.');
+            }
+        } catch (\Throwable $e) {
+            Log::error($e);
         }
     }
 
@@ -41,7 +50,7 @@ return new class('/\/resolve (?<id>.+)/i') extends Command {
         $payload = $callback->getPayload();
 
         $index = $callback->getSelectIndex();
-        $uri = null !== $index ? $payload->get($index)->getUri() : null;
+        $uri = null !== $index ? $payload[$index]->getUri() : null;
 
         $this->sender->answerCallbackQuery($update->getCallbackQuery()->getId())->then(
             function () use ($update, $player, $uri, $defer, $callback) {
@@ -72,13 +81,9 @@ return new class('/\/resolve (?<id>.+)/i') extends Command {
 
         $index = $callback->getSelectIndex();
 
-        $start = $payload->get($index)->getName();
+        $start = $payload[$index]->getName();
 
-        $uris = $payload->map(
-            function (CallbackPayloadItem $item) {
-                return $item->getUri();
-            }
-        )->toArray();
+        $uris = invoke($payload, 'getUri');
 
         $first = $uris[$index];
         unset($uris[$index]);
@@ -86,17 +91,21 @@ return new class('/\/resolve (?<id>.+)/i') extends Command {
 
         $player->playList($uris)->then(
             function () use ($update, $callback, $start, $defer) {
-                $callbackId = $update->getCallbackQuery()->getId();
+                try {
+                    $callbackId = $update->getCallbackQuery()->getId();
 
-                When\all(
-                    [
-                        $this->sender->answerCallbackQuery($callbackId),
-                        $this->sender->deleteMessage($callback->getUser()->getId(), $callback->getMessageId()),
-                    ]
-                )->then(
-                    \Closure::fromCallable([$defer, 'resolve']),
-                    \Closure::fromCallable([$defer, 'reject'])
-                );
+                    When\all(
+                        [
+                            $this->sender->answerCallbackQuery($callbackId),
+                            $this->sender->deleteMessage($callback->getUserId(), $callback->getMessageId()),
+                        ]
+                    )->then(
+                        \Closure::fromCallable([$defer, 'resolve']),
+                        \Closure::fromCallable([$defer, 'reject'])
+                    );
+                } catch (\Throwable $e) {
+                    Log::error($e);
+                }
             },
             \Closure::fromCallable([$defer, 'reject'])
         );

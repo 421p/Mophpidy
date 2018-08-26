@@ -19,12 +19,12 @@ return new class('/favou?rites/i') extends Command {
                 $callback = CallbackContainer::pack(
                     $data,
                     CallbackContainer::TRACKS,
-                    $storage->getUser($update->getMessage()->getChat()->getId())
+                    $update->getMessage()->getChat()->getId()
                 );
 
                 $handler = function (array $data) use ($storage, $callback) {
                     $callback->setMessageId($data['message_id']);
-                    $storage->addCallback($callback);
+                    $storage->addOrUpdateCallback($callback);
                 };
 
                 $this->sender->sendMessage(

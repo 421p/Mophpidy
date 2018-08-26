@@ -1,4 +1,5 @@
 parameters:
+  redis.connection_string: '%env(REDIS_CONNECTION_STRING)%'
   keyboard.default:
     -
       - '❤️ Favorites'
@@ -43,8 +44,9 @@ services:
       - '@Mophpidy\Api\Mixer'
       - '@Mophpidy\Api\Endpoint'
       - '@Mophpidy\Telegram\TelegramCommunicator'
+      - '@Mophpidy\Storage\Storage'
     calls:
-      - ['listenGeneralEvents', ['@service_container']]
+      - ['listenGeneralEvents']
 
   Longman\TelegramBot\Telegram:
     public: true
@@ -67,41 +69,15 @@ services:
       - ['cacheCommands']
     public: true
 
-  Mophpidy\Telegram\Callback\CallbackStorage:
-    arguments: ['@React\EventLoop\LoopInterface']
-    public: true
-
   Mophpidy\Storage\Storage:
     public: true
-    shared: false
-    arguments: ['@Doctrine\ORM\EntityManager']
+    arguments: ['@Mophpidy\Storage\Redis\RedisPromise', '@Mophpidy\Storage\Redis\RedisPromise']
     calls:
       - ['updateAdmins']
 
-  Doctrine\ORM\EntityManager:
+  Mophpidy\Storage\Redis\RedisPromise:
     shared: false
-    public: true
-    factory:
-      - 'Doctrine\ORM\EntityManager'
-      - 'create'
-    arguments:
-      -
-        driver: pdo_mysql
-        host: mysql
-        user: root
-        password: secure-password
-        dbname: mophpidy
-      - '@Doctrine\ORM\Configuration'
-  Doctrine\ORM\Configuration:
-    factory:
-      - 'Doctrine\ORM\Tools\Setup'
-      - 'createAnnotationMetadataConfiguration'
-    arguments: [['src/Entity'], true, null, '@Doctrine\Common\Cache\RedisCache', false]
-
-  Redis:
-    class: Redis
-    calls:
-      - [connect, ['redis', 6379]]
-  Doctrine\Common\Cache\RedisCache:
-    calls:
-      - [setRedis, ['@Redis']]
+    factory: ['@Mophpidy\Storage\Redis\RedisFactory', create]
+    arguments: ['%redis.connection_string%']
+  Mophpidy\Storage\Redis\RedisFactory:
+    arguments: ['@React\EventLoop\LoopInterface']

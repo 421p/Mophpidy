@@ -1,43 +1,15 @@
 version: '3'
 
 services:
-  bot:
-    image: 421p/mophpidy
-    environment:
-      - MOPIDY_URI
-      - TELEGRAM_TOKEN
-      - BOT_USERNAME
-      - ADMIN
-    depends_on:
-      - mysql
-      - redis
-      - processor
-  processor:
-    image: 421p/mophpidy-nginx
-    depends_on:
-      - processor-1
-      - processor-2
-  processor-1:
-    image: 421p/mophpidy
-    environment:
-      - MOPIDY_URI
-      - TELEGRAM_TOKEN
-      - BOT_USERNAME
-      - ADMIN
-    command: 'php processor.php'
-  processor-2:
-    image: 421p/mophpidy
-    environment:
-      - MOPIDY_URI
-      - TELEGRAM_TOKEN
-      - BOT_USERNAME
-      - ADMIN
-    command: 'php processor.php'
-    depends_on:
-      - processor-1
+#  bot:
+#    image: 421p/mophpidy
+#    environment:
+#      - MOPIDY_URI
+#      - TELEGRAM_TOKEN
+#      - BOT_USERNAME
+#      - ADMIN
+#    depends_on:
+#      - redis
   redis:
     image: redis
-  mysql:
-    image: mysql:5.5
-    environment:
-      MYSQL_ROOT_PASSWORD: secure-password
+    command: 'redis-server --appendonly yes'

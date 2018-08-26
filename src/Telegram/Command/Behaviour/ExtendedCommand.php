@@ -1,15 +1,17 @@
 <?php
 
-namespace Mophpidy\Telegram;
 
-use Longman\TelegramBot\Commands\SystemCommand;
+namespace Mophpidy\Telegram\Command\Behaviour;
+
+
 use Longman\TelegramBot\Entities\Update;
 use Longman\TelegramBot\Telegram;
 use Mophpidy\Behaviour\ContainerAccess;
 use Mophpidy\Command\CommandHolder;
 use Mophpidy\Storage\Storage;
+use Mophpidy\Telegram\TelegramCommunicator;
 
-class ExtendedSystemCommand extends SystemCommand
+trait ExtendedCommand
 {
     use ContainerAccess;
 
@@ -29,8 +31,12 @@ class ExtendedSystemCommand extends SystemCommand
         return $this->getContainer()->get(Storage::class);
     }
 
-    protected function isUserAllowed(int $id)
+    public function execute()
     {
-        return $this->storage->isUserAllowed($id);
+        $this->doExecute();
+
+        return parent::execute();
     }
+
+    abstract protected function doExecute(): void;
 }

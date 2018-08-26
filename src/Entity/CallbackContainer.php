@@ -2,70 +2,34 @@
 
 namespace Mophpidy\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 use function Functional\map;
 
-/**
- * @ORM\Table(name="callback", indexes={@ORM\Index(name="callback_id_index", columns={"id"})})
- * @ORM\Entity
- */
-class CallbackContainer
+class CallbackContainer implements \Serializable, \JsonSerializable
 {
     const DIRECTORIES = 1;
-    const TRACKS = 2;
+    const TRACKS      = 2;
 
-    const DELETE = -1;
+    const DELETE   = -1;
     const BACKWARD = -2;
 
-    /**
-     * @ORM\Column(name="id", type="string")
-     * @ORM\Id
-     */
     protected $id;
-    /** @ORM\Column(name="date", type="date") */
     protected $date;
-    /** @ORM\Column(name="message_id", type="integer") */
     protected $messageId;
 
-    /**
-     * @var CallbackContainer
-     * @ORM\ManyToOne(targetEntity="CallbackContainer", inversedBy="children")
-     * @ORM\JoinColumn(name="parent_id", referencedColumnName="id", onDelete="CASCADE", nullable=true)
-     */
-    protected $parent;
-    /**
-     * @ORM\OneToMany(targetEntity="CallbackContainer", mappedBy="children", cascade={"persist", "remove"})
-     */
-    protected $children;
-    /**
-     * @ORM\OneToMany(targetEntity="CallbackPayloadItem", mappedBy="callback", cascade={"persist", "remove"})
-     */
-    protected $payload;
-    /** @ORM\Column(name="type", type="integer") */
+    protected $payload = [];
     protected $type;
-    /**
-     * @var User
-     * @ORM\ManyToOne(targetEntity="Mophpidy\Entity\User", inversedBy="callbacks")
-     * @ORM\JoinColumn(name="user_id", referencedColumnName="id")
-     */
-    protected $user;
+
+    protected $userId;
 
     protected $selectIndex;
 
-    public function __construct()
-    {
-        $this->children = new ArrayCollection();
-        $this->payload = new ArrayCollection();
-    }
-
-    public static function pack(array $data, string $type, User $user): CallbackContainer
+    public static function pack(array $data, string $type, int $userId): CallbackContainer
     {
         $callback = new CallbackContainer();
         $callback->setId(Uuid::uuid4()->toString());
         $callback->setDate(new \DateTime());
-        $callback->setUser($user);
+        $callback->setUserId($userId);
 
         $callback->setType($type);
 
@@ -83,49 +47,41 @@ class CallbackContainer
 
     public function addItem(CallbackPayloadItem $item)
     {
-        $this->payload->add($item);
-        $item->setCallback($this);
+        $this->payload[] = $item;
     }
 
     public function mapInlineKeyboard(): array
     {
+        $i       = 0;
         $buttons = map(
-            $this->payload->getIterator(),
-            function (CallbackPayloadItem $item, int $i) {
-                return [
+            $this->payload,
+            function (CallbackPayloadItem $item) use (&$i) {
+                $mapping = [
                     [
-                        'text' => $item->getName(),
+                        'text'          => $item->getName(),
                         'callback_data' => sprintf('%s:%d', $this->id, $i),
                     ],
                 ];
+
+                $i++;
+
+                return $mapping;
             }
         );
 
         $buttons[] = [
             [
-                'text' => '❌ Close',
+                'text'          => '❌ Close',
                 'callback_data' => sprintf('%s:%d', $this->id, self::DELETE),
             ],
         ];
-
-        if ($this->hasParent()) {
-            array_unshift(
-                $buttons,
-                [
-                    [
-                        'text' => '⬅️Back',
-                        'callback_data' => sprintf('%s:%d', $this->id, self::BACKWARD),
-                    ],
-                ]
-            );
-        }
 
         return $buttons;
     }
 
     public function getCommand(): string
     {
-        return sprintf('/resolve %s', $this->id);
+        return '/resolve';
     }
 
     public function getId(): string
@@ -138,7 +94,9 @@ class CallbackContainer
         return $this->date;
     }
 
-    /** @return ArrayCollection */
+    /**
+     * @return CallbackPayloadItem[]
+     */
     public function getPayload()
     {
         return $this->payload;
@@ -174,14 +132,9 @@ class CallbackContainer
         $this->date = $date;
     }
 
-    public function getUser(): User
+    public function getUserId(): int
     {
-        return $this->user;
-    }
-
-    public function setUser(User $user): void
-    {
-        $this->user = $user;
+        return $this->userId;
     }
 
     public function getMessageId()
@@ -194,50 +147,67 @@ class CallbackContainer
         $this->messageId = $messageId;
     }
 
-    public function getChildren()
+    /**
+     * @param int $userId
+     */
+    public function setUserId(int $userId): void
     {
-        return $this->children;
+        $this->userId = $userId;
     }
 
-    public function getRoot(): CallbackContainer
+    /**
+     * String representation of object
+     *
+     * @link  http://php.net/manual/en/serializable.serialize.php
+     * @return string the string representation of the object or null
+     * @since 5.1.0
+     */
+    public function serialize()
     {
-        $root = $this;
-
-        while (null !== ($parent = $root->getParent())) {
-            $root = $parent;
-        }
-
-        return $root;
+        return json_encode($this);
     }
 
-    public function purgeChildren()
+    /**
+     * Constructs the object
+     *
+     * @link  http://php.net/manual/en/serializable.unserialize.php
+     *
+     * @param string $serialized <p>
+     *                           The string representation of the object.
+     *                           </p>
+     *
+     * @return void
+     * @since 5.1.0
+     */
+    public function unserialize($serialized)
     {
-        $this->children->clear();
+        $data = json_decode($serialized, true);
+
+        $this->id        = $data['id'];
+        $this->date      = new \DateTime($data['date']['date'], new \DateTimeZone($data['date']['timezone']));
+        $this->messageId = $data['messageId'];
+        $this->userId    = $data['userId'];
+        $this->type      = $data['type'];
+        $this->payload   = array_map([CallbackPayloadItem::class, 'fromArray'], $data['payload']);
     }
 
-    public function hasChildren(): bool
+    /**
+     * Specify data which should be serialized to JSON
+     *
+     * @link  http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    public function jsonSerialize()
     {
-        return 0 !== $this->children->count();
-    }
-
-    public function hasParent(): bool
-    {
-        return null !== $this->getParent();
-    }
-
-    public function getParent(): ?CallbackContainer
-    {
-        return $this->parent;
-    }
-
-    public function setParent(CallbackContainer $parent)
-    {
-        $this->parent = $parent;
-    }
-
-    public function addChild(CallbackContainer $child)
-    {
-        $this->children->add($child);
-        $child->setParent($this);
+        return [
+            'id'        => $this->id,
+            'date'      => $this->date,
+            'messageId' => $this->messageId,
+            'userId'    => $this->userId,
+            'type'      => $this->type,
+            'payload'   => $this->payload,
+        ];
     }
 }

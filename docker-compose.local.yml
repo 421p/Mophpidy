@@ -1,18 +1,14 @@
 version: '3'
 
 services:
-  bot:
+#  bot:
+#    volumes:
+#      - .:/app
+  redis:
     volumes:
-      - .:/app
-  processor-1:
-    volumes:
-      - .:/app
-  processor-2:
-    volumes:
-      - .:/app
-  mysql:
-    volumes:
-      - mysql-data:/var/lib/mysql
+      - redis-data:/data
+    ports:
+      - 6379:6379
 
 volumes:
-  mysql-data:
+  redis-data:

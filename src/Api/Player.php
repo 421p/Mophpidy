@@ -2,10 +2,10 @@
 
 namespace Mophpidy\Api;
 
+use Mophpidy\Entity\User;
 use Mophpidy\Logging\Log;
 use Mophpidy\Storage\Storage;
 use Mophpidy\Telegram\TelegramCommunicator;
-use Psr\Container\ContainerInterface;
 use React\Promise as When;
 use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
@@ -21,6 +21,7 @@ class Player
     private $mixer;
     private $endpoint;
     private $sender;
+    private $storage;
 
     private $eventsCache = [
         self::TRACK_PLAYBACK_STARTED => null,
@@ -33,14 +34,17 @@ class Player
         Playback $playback,
         Mixer $mixer,
         Endpoint $endpoint,
-        TelegramCommunicator $sender
-    ) {
-        $this->library = $library;
-        $this->list = $list;
+        TelegramCommunicator $sender,
+        Storage $storage
+    )
+    {
+        $this->library  = $library;
+        $this->list     = $list;
         $this->playback = $playback;
-        $this->mixer = $mixer;
+        $this->mixer    = $mixer;
         $this->endpoint = $endpoint;
-        $this->sender = $sender;
+        $this->sender   = $sender;
+        $this->storage  = $storage;
     }
 
     public function getQueue(): PromiseInterface
@@ -48,11 +52,11 @@ class Player
         return $this->list->getTracks();
     }
 
-    public function listenGeneralEvents(ContainerInterface $container)
+    public function listenGeneralEvents()
     {
         $this->listenMopidyEvent(
             self::TRACK_PLAYBACK_STARTED,
-            function (array $data) use ($container) {
+            function (array $data) {
                 $track = $data['tl_track']['track'];
 
                 if ($this->eventsCache[self::TRACK_PLAYBACK_STARTED] !== $track) {
@@ -69,45 +73,49 @@ class Player
                             ) : sprintf('Current track: %s', $track['name'])
                     );
 
-                    foreach ($container->get(Storage::class)->getNotificationSubscribers() as $user) {
-                        $this->sender->sendMessageWithDefaultKeyboard(
-                            [
-                                'chat_id' => $user->getId(),
-                                'text' => $text,
-                            ]
-                        )->then(
-                            null,
-                            function (\Throwable $e) {
-                                Log::error($e);
-                            }
-                        );
-                    }
+                    $this->storage->forEachNotificationSubscriber(
+                        function (User $user) use ($text) {
+                            $this->sender->sendMessageWithDefaultKeyboard(
+                                [
+                                    'chat_id' => $user->getId(),
+                                    'text'    => $text,
+                                ]
+                            )->then(
+                                null,
+                                function (\Throwable $e) {
+                                    Log::error($e);
+                                }
+                            );
+                        }
+                    );
                 }
             }
         );
 
         $this->listenMopidyEvent(
             self::PLAYBACK_STATE_CHANGED,
-            function ($data) use ($container) {
-                foreach ($container->get(Storage::class)->getNotificationSubscribers() as $user) {
-                    if ($data['old_state'] !== $data['new_state']) {
-                        $this->sender->sendMessageWithDefaultKeyboard(
-                            [
-                                'chat_id' => $user->getId(),
-                                'text' => sprintf(
-                                    'Stage changed from %s to %s',
-                                    $data['old_state'],
-                                    $data['new_state']
-                                ),
-                            ]
-                        )->then(
-                            null,
-                            function (\Throwable $e) {
-                                Log::error($e);
-                            }
-                        );
+            function ($data) {
+                $this->storage->forEachNotificationSubscriber(
+                    function (User $user) use ($data) {
+                        if ($data['old_state'] !== $data['new_state']) {
+                            $this->sender->sendMessageWithDefaultKeyboard(
+                                [
+                                    'chat_id' => $user->getId(),
+                                    'text'    => sprintf(
+                                        'Stage changed from %s to %s',
+                                        $data['old_state'],
+                                        $data['new_state']
+                                    ),
+                                ]
+                            )->then(
+                                null,
+                                function (\Throwable $e) {
+                                    Log::error($e);
+                                }
+                            );
+                        }
                     }
-                }
+                );
             }
         );
     }
@@ -164,7 +172,7 @@ class Player
             ]
         )->then(
             function () use ($defer, $uri) {
-                Log::info('Added track with uri: '.$uri.' to playback.');
+                Log::info('Added track with uri: ' . $uri . ' to playback.');
 
                 $this->playback->play()->then(\Closure::fromCallable([$defer, 'resolve']));
             }
